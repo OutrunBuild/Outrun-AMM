@@ -25,7 +25,7 @@ contract OutrunAMMScript is BaseScript {
         console.log("Pair initcode:");
         console.logBytes32(keccak256(abi.encodePacked(type(OutrunAMMPair).creationCode)));
 
-        _deploy(4);
+        _deploy(6);
         
         // ReferralManager
         // referralManager = address(new ReferralManager(owner));
@@ -35,8 +35,8 @@ contract OutrunAMMScript is BaseScript {
     function _deploy(uint256 nonce) internal {
         if (block.chainid == vm.envUint("BASE_SEPOLIA_CHAINID")) {
             WETH = vm.envAddress("BASE_SEPOLIA_WETH");
-        } else if (block.chainid == vm.envUint("MANTLE_SEPOLIA_CHAINID")) {
-            WETH = vm.envAddress("MANTLE_SEPOLIA_WMNT");
+        } else if (block.chainid == vm.envUint("SCROLL_SEPOLIA_CHAINID")) {
+            WETH = vm.envAddress("SCROLL_SEPOLIA_WETH");
         } else if (block.chainid == vm.envUint("BSC_TESTNET_CHAINID")) {
             WETH = vm.envAddress("BSC_TESTNET_WBNB");
         }
