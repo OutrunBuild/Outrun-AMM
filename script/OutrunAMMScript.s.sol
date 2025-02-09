@@ -25,7 +25,7 @@ contract OutrunAMMScript is BaseScript {
         console.log("Pair initcode:");
         console.logBytes32(keccak256(abi.encodePacked(type(OutrunAMMPair).creationCode)));
 
-        _deploy(6);
+        _deploy(7);
         
         // ReferralManager
         // referralManager = address(new ReferralManager(owner));
