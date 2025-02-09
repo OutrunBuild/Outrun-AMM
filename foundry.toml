@@ -12,6 +12,7 @@ gas_reports = ["*"]
 [rpc_endpoints]
 base_sepolia = "${BASE_SEPOLIA_RPC}"
 blast_sepolia = "${BLAST_SEPOLIA_RPC}"
+scroll_sepolia = "${SCROLL_SEPOLIA_RPC}"
 mantle_sepolia = "${MANTLE_SEPOLIA_RPC}"
 bsc_testnet = "${BSC_TESTNET_RPC}"
 bsc_mainnet = "${BSC_MAINNET_RPC}"
@@ -20,6 +21,7 @@ bsc_mainnet = "${BSC_MAINNET_RPC}"
 base_sepolia = { key = "${BASESCAN_API_KEY}", chain = "84532", url = "${BASESCAN_API_URL}" }
 blast_sepolia = { key = "${BLASTSCAN_API_KEY}", chain = "168587773", url = "${BLASTSCAN_API_URL}" }
 mantle_sepolia = { key = "${MANTLESCAN_API_KEY}", chain = "5003", url = "${MANTLESCAN_API_URL}" }
+scroll_sepolia = { key = "${SCROLLSCAN_API_KEY}", chain = "534351", url = "${SCROLLSCAN_API_URL}" }
 bsc_testnet = { key = "${BSCSCAN_API_KEY}", chain = "97", url = "${BSCSCAN_TESTNET_API_URL}" }
 bsc_mainnet = { key = "${BSCSCAN_API_KEY}", chain = "56", url = "${BSCSCAN_API_URL}" }
 

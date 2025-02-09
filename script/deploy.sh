@@ -14,9 +14,9 @@ forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url base_sepolia \
     --broadcast --ffi -vvvv \
     --verify 
 
-forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url mantle_sepolia \
-    --with-gas-price 20000000 \
+forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url scroll_sepolia \
+    --priority-gas-price 100 --with-gas-price 80000000 \
     --optimize --optimizer-runs 100000 \
     --via-ir \
     --broadcast --ffi -vvvv \
-    --verify 
+    --verify
