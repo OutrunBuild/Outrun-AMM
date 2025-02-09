@@ -68,7 +68,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20 {
         uint256 feeAppendX128 = balanceOf[msgSender] * (feeGrowthX128 - feeGrowthRecordX128[msgSender]);
         uint256 unClaimedFeeX128 = unClaimedFeesX128[msgSender];
         if (feeAppendX128 > 0) {
-            unClaimedFeeX128 += + feeAppendX128;
+            unClaimedFeeX128 += feeAppendX128;
         }
 
         uint256 rootKLast = Math.sqrt(kLast);
