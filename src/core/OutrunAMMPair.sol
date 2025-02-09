@@ -68,7 +68,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20 {
         uint256 feeAppendX128 = balanceOf[msgSender] * (feeGrowthX128 - feeGrowthRecordX128[msgSender]);
         uint256 unClaimedFeeX128 = unClaimedFeesX128[msgSender];
         if (feeAppendX128 > 0) {
-            unClaimedFeeX128 += unClaimedFeeX128 + feeAppendX128;
+            unClaimedFeeX128 += + feeAppendX128;
         }
 
         uint256 rootKLast = Math.sqrt(kLast);
@@ -123,7 +123,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20 {
 
     /**
      * @dev Burn liquidity (LP) and withdraw token0 and token1
-     * @param to - addree to receive token and calc this address's maker fee
+     * @param to - Address to receive token and calc this address's maker fee
      * @notice - this low-level function should be called from a contract which performs important safety checks
      */
     function burn(address to) external lock returns (uint256 amount0, uint256 amount1) {
