@@ -89,7 +89,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20 {
 
     /**
      * @dev Mint liquidity (LP)
-     * @param to - addree to receive LP token and calc this address's maker fee
+     * @param to - address to receive LP token and calc this address's maker fee
      * @notice this low-level function should be called from a contract which performs important safety checks
      */
     function mint(address to) external lock returns (uint256 liquidity) {
