@@ -1,6 +1,7 @@
 //SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.28;
 
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IOutrunAMMPair, OutrunAMMPair} from "./OutrunAMMPair.sol";
@@ -8,6 +9,7 @@ import {IOutrunAMMFactory} from "./interfaces/IOutrunAMMFactory.sol";
 
 contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
     uint256 public immutable swapFeeRate;
+    address public immutable pairImplementation;
 
     address public feeTo;
     address[] public allPairs;
@@ -16,9 +18,11 @@ contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
 
     constructor(
         address owner_, 
+        address pairImplementation_, 
         uint256 swapFeeRate_
     ) Ownable(owner_) {
         swapFeeRate = swapFeeRate_;
+        pairImplementation = pairImplementation_;
     }
 
     function allPairsLength() external view returns (uint256) {
@@ -32,8 +36,8 @@ contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
         require(token0 != address(0), ZeroAddress());
         require(getPair[token0][token1] == address(0), PairExists()); // single check is sufficient
 
-        bytes32 _salt = keccak256(abi.encodePacked(token0, token1, swapFeeRate));
-        pair = address(new OutrunAMMPair{salt: _salt}());
+        bytes32 salt = keccak256(abi.encodePacked(token0, token1, swapFeeRate));
+        pair = Clones.cloneDeterministic(pairImplementation, salt);
         IOutrunAMMPair(pair).initialize(token0, token1, swapFeeRate);
         
         getPair[token0][token1] = pair;

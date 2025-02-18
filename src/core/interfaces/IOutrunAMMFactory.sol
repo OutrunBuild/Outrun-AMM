@@ -1,8 +1,10 @@
 //SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.28;
 
 interface IOutrunAMMFactory {
     function swapFeeRate() external view returns (uint256);
+
+    function pairImplementation() external view returns (address);
     
     function feeTo() external view returns (address);
 
