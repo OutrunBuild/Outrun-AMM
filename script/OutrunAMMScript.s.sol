@@ -26,7 +26,7 @@ contract OutrunAMMScript is BaseScript {
 
         // _deployPairImplementation(0);
 
-        _deploy(8);
+        _deploy(9);
         
         // ReferralManager
         // referralManager = address(new ReferralManager(owner));
