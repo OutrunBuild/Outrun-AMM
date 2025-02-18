@@ -14,6 +14,7 @@ contract OutrunAMMScript is BaseScript {
     address internal feeTo;
     address internal referralManager;
     address internal OUTRUN_DEPLOYER;
+    address internal pairImplementation;
 
     address internal WETH;
 
@@ -21,11 +22,11 @@ contract OutrunAMMScript is BaseScript {
         owner = vm.envAddress("OWNER");
         feeTo = vm.envAddress("FEE_TO");
         OUTRUN_DEPLOYER = vm.envAddress("OUTRUN_DEPLOYER");
-        
-        console.log("Pair initcode:");
-        console.logBytes32(keccak256(abi.encodePacked(type(OutrunAMMPair).creationCode)));
+        pairImplementation = vm.envAddress("PAIR_IMPLEMENTATION");
 
-        _deploy(7);
+        // _deployPairImplementation(0);
+
+        _deploy(8);
         
         // ReferralManager
         // referralManager = address(new ReferralManager(owner));
@@ -53,12 +54,19 @@ contract OutrunAMMScript is BaseScript {
         _deployOutrunAMMRouter(factory0, factory1, nonce);
     }
 
+    function _deployPairImplementation(uint256 nonce) internal returns (address implementation) {
+        bytes32 salt = keccak256(abi.encodePacked("OutrunAMMPairImplementation", nonce));
+        implementation = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, type(OutrunAMMPair).creationCode);
+
+        console.log("OutrunAMMPairImplementation deployed on %s", implementation);
+    }
+
     function _deployFactory(uint256 swapFeeRate, uint256 nonce) internal returns (address factoryAddr) {
         // Deploy OutrunAMMFactory By OutrunDeployer
         bytes32 salt = keccak256(abi.encodePacked("OutrunAMMFactory", swapFeeRate, nonce));
         bytes memory creationCode = abi.encodePacked(
             type(OutrunAMMFactory).creationCode,
-            abi.encode(owner, swapFeeRate)
+            abi.encode(owner, pairImplementation, swapFeeRate)
         );
         factoryAddr = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
         IOutrunAMMFactory(factoryAddr).setFeeTo(feeTo);
