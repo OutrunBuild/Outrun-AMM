@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.28;
 
 import "./BaseScript.s.sol";
 import {IOutrunDeployer} from "./IOutrunDeployer.sol";

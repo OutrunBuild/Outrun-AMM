@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.28;
 
 import {FixedPoint} from "./FixedPoint.sol";
 import {IOutrunAMMPair} from "../core/interfaces/IOutrunAMMPair.sol";

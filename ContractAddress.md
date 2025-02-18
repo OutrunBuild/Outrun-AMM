@@ -1,9 +1,5 @@
 # Contract
 
-## Pair initCode hash
-
-f2ae910909621eb766635e40796e51cce53956c06807e96b04b6444e41fbf079
-
 ReferralManager(BSC Testnet): 0x19D4B167198a6f5c5cF5A31668a0F276c3EF173e  
 
 ## Omnichain

@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.28;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -45,10 +45,6 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20 {
         unlocked = 1;
     }
 
-    constructor() {
-        factory = msg.sender;
-    }
-
     function getPairTokens() external view override returns (address _token0, address _token1) {
         _token0 = token0;
         _token1 = token1;
@@ -88,6 +84,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20 {
         token0 = _token0;
         token1 = _token1;
         swapFeeRate = _swapFeeRate;
+        factory = msg.sender;
     }
 
     /**

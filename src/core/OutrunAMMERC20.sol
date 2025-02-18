@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.28;
 
 import {IOutrunAMMERC20} from "./interfaces/IOutrunAMMERC20.sol";
 
