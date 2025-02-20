@@ -36,7 +36,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
     mapping(address account => uint256) public feeGrowthRecordX128; // record the feeGrowthX128 when calc maker's append fee
     mapping(address account => uint256) public unClaimedFeesX128;
 
-    uint256 private unlocked = 1;
+    uint256 private unlocked;
 
     modifier lock() {
         require(unlocked == 1, Locked());
@@ -85,6 +85,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
         token1 = _token1;
         swapFeeRate = _swapFeeRate;
         factory = msg.sender;
+        unlocked = 1;
     }
 
     /**
