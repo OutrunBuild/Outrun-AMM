@@ -4,14 +4,15 @@ pragma solidity ^0.8.28;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {IOutrunAMMERC20, OutrunAMMERC20} from "./OutrunAMMERC20.sol";
+import {UQ112x112} from "../libraries/UQ112x112.sol";
+import {FixedPoint128} from "../libraries/FixedPoint128.sol";
+import {Initializable} from "../libraries/Initializable.sol";
 import {IOutrunAMMPair} from "./interfaces/IOutrunAMMPair.sol";
 import {IOutrunAMMCallee} from "./interfaces/IOutrunAMMCallee.sol";
 import {IOutrunAMMFactory} from "./interfaces/IOutrunAMMFactory.sol";
-import {UQ112x112} from "../libraries/UQ112x112.sol";
-import {FixedPoint128} from "../libraries/FixedPoint128.sol";
+import {IOutrunAMMERC20, OutrunAMMERC20} from "./OutrunAMMERC20.sol";
 
-contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20 {
+contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
     using UQ112x112 for uint224;
 
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes("transfer(address,uint256)")));
@@ -77,8 +78,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20 {
         address _token0, 
         address _token1, 
         uint256 _swapFeeRate
-    ) external {
-        require(msg.sender == factory, Forbidden());
+    ) external initializer {
         require(_swapFeeRate < RATIO, FeeRateOverflow());
 
         token0 = _token0;
