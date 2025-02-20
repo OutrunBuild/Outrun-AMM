@@ -64,9 +64,9 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
         address msgSender = msg.sender;
         uint256 feeAppendX128 = balanceOf[msgSender] * (feeGrowthX128 - feeGrowthRecordX128[msgSender]);
         uint256 unClaimedFeeX128 = unClaimedFeesX128[msgSender];
-        if (feeAppendX128 > 0) {
-            unClaimedFeeX128 += feeAppendX128;
-        }
+        
+        if (feeAppendX128 > 0) unClaimedFeeX128 += feeAppendX128;
+        if (unClaimedFeeX128 == 0) return (0, 0);
 
         uint256 rootKLast = Math.sqrt(kLast);
         amount0 = (unClaimedFeeX128 * reserve0 / rootKLast) / FixedPoint128.Q128;
@@ -229,7 +229,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
         _calcFeeX128(msgSender);
 
         uint256 feeX128 = unClaimedFeesX128[msgSender];
-        require(feeX128 > 0, InsufficientUnclaimedFee());
+        if (feeX128 == 0) return (0, 0);
         unClaimedFeesX128[msgSender] = 0;
         
         uint256 unClaimedFee;
