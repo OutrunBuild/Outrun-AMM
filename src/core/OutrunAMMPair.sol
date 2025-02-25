@@ -69,8 +69,8 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
         if (unClaimedFeeX128 == 0) return (0, 0);
 
         uint256 rootKLast = Math.sqrt(kLast);
-        amount0 = (unClaimedFeeX128 * reserve0 / rootKLast) / FixedPoint128.Q128;
-        amount1 = (unClaimedFeeX128 * reserve1 / rootKLast) / FixedPoint128.Q128;
+        amount0 = unClaimedFeeX128 / FixedPoint128.Q128 * reserve0 / rootKLast;
+        amount1 = unClaimedFeeX128 / FixedPoint128.Q128 * reserve1 / rootKLast;
     }
 
     // called once by the factory at time of deployment
