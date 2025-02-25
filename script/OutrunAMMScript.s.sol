@@ -24,9 +24,9 @@ contract OutrunAMMScript is BaseScript {
         OUTRUN_DEPLOYER = vm.envAddress("OUTRUN_DEPLOYER");
         pairImplementation = vm.envAddress("PAIR_IMPLEMENTATION");
 
-        // _deployPairImplementation(4);
+        // _deployPairImplementation(5);
 
-        _deploy(13);
+        _deploy(14);
         
         // ReferralManager
         // referralManager = address(new ReferralManager(owner));
