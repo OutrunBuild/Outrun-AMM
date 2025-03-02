@@ -8,11 +8,12 @@ import {UQ112x112} from "../libraries/UQ112x112.sol";
 import {FixedPoint128} from "../libraries/FixedPoint128.sol";
 import {Initializable} from "../libraries/Initializable.sol";
 import {IOutrunAMMPair} from "./interfaces/IOutrunAMMPair.sol";
+import {ReentrancyGuard} from "../libraries/ReentrancyGuard.sol";
 import {IOutrunAMMCallee} from "./interfaces/IOutrunAMMCallee.sol";
 import {IOutrunAMMFactory} from "./interfaces/IOutrunAMMFactory.sol";
 import {IOutrunAMMERC20, OutrunAMMERC20} from "./OutrunAMMERC20.sol";
 
-contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
+contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initializable {
     using UQ112x112 for uint224;
 
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes("transfer(address,uint256)")));
@@ -35,16 +36,6 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
     uint256 public feeGrowthX128; // accumulate maker fee per LP X128
     mapping(address account => uint256) public feeGrowthRecordX128; // record the feeGrowthX128 when calc maker's append fee
     mapping(address account => uint256) public unClaimedFeesX128;
-
-    uint256 private unlocked;
-
-    modifier lock() {
-        require(unlocked == 1, Locked());
-
-        unlocked = 0;
-        _;
-        unlocked = 1;
-    }
 
     function getPairTokens() external view override returns (address _token0, address _token1) {
         _token0 = token0;
@@ -85,7 +76,6 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
         token1 = _token1;
         swapFeeRate = _swapFeeRate;
         factory = msg.sender;
-        unlocked = 1;
     }
 
     /**
@@ -93,7 +83,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
      * @param to - address to receive LP token and calc this address's maker fee
      * @notice this low-level function should be called from a contract which performs important safety checks
      */
-    function mint(address to) external lock returns (uint256 liquidity) {
+    function mint(address to) external nonReentrant returns (uint256 liquidity) {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
         uint256 balance1 = IERC20(token1).balanceOf(address(this));
@@ -124,7 +114,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
      * @param to - Address to receive token and calc this address's maker fee
      * @notice - this low-level function should be called from a contract which performs important safety checks
      */
-    function burn(address to) external lock returns (uint256 amount0, uint256 amount1) {
+    function burn(address to) external nonReentrant returns (uint256 amount0, uint256 amount1) {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
         address _token0 = token0;
         address _token1 = token1;
@@ -159,7 +149,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
      * @param referrer - Address of rebate referrer
      * @notice - this low-level function should be called from a contract which performs important safety checks
      */
-    function swap(uint256 amount0Out, uint256 amount1Out, address to, address referrer, bytes calldata data) external lock {
+    function swap(uint256 amount0Out, uint256 amount1Out, address to, address referrer, bytes calldata data) external nonReentrant {
         require(amount0Out > 0 || amount1Out > 0, InsufficientOutputAmount());
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
         require(amount0Out < _reserve0 && amount1Out < _reserve1, InsufficientLiquidity());
@@ -261,7 +251,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
      * @dev Force balances to match reserves
      * @param to - Address to receive excess tokens
      */
-    function skim(address to) external lock {
+    function skim(address to) external nonReentrant {
         address _token0 = token0; // gas savings
         address _token1 = token1; // gas savings
         _safeTransfer(_token0, to, IERC20(_token0).balanceOf(address(this)) - reserve0);
@@ -271,7 +261,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, Initializable {
     /**
      * @dev Force reserves to match balances
      */
-    function sync() external lock {
+    function sync() external nonReentrant {
         _update(IERC20(token0).balanceOf(address(this)), IERC20(token1).balanceOf(address(this)), reserve0, reserve1);
     }
 
