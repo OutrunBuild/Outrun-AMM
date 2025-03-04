@@ -198,7 +198,7 @@ interface IOutrunAMMRouter {
 
     error InvalidPath();
 
-    error InvaildETHSender();
+    error InvalidETHSender();
 
     error InsufficientAmount();
 
