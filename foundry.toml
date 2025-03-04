@@ -10,19 +10,34 @@ extra_output = ["storageLayout"]
 gas_reports = ["*"]
 
 [rpc_endpoints]
+bsc_testnet = "${BSC_TESTNET_RPC}"
 base_sepolia = "${BASE_SEPOLIA_RPC}"
+arbitrum_sepolia = "${ARBITRUM_SEPOLIA_RPC}"
+avalanche_fuji = "${AVALANCHE_FUJI_RPC}"
+polygon_amoy = "${POLYGON_AMOY_RPC}"
+sonic_blaze = "${SONIC_BLAZE_RPC}"
+optimistic_sepolia = "${OPTIMISTIC_SEPOLIA_RPC}"
+zksync_sepolia = "${ZKSYNC_SEPOLIA_RPC}"
+linea_sepolia = "${LINEA_SEPOLIA_RPC}"
 blast_sepolia = "${BLAST_SEPOLIA_RPC}"
 scroll_sepolia = "${SCROLL_SEPOLIA_RPC}"
-mantle_sepolia = "${MANTLE_SEPOLIA_RPC}"
-bsc_testnet = "${BSC_TESTNET_RPC}"
+monad_testnet = "${MONAD_TESTNET_RPC}"
+
 bsc_mainnet = "${BSC_MAINNET_RPC}"
 
 [etherscan]
-base_sepolia = { key = "${BASESCAN_API_KEY}", chain = "84532", url = "${BASESCAN_API_URL}" }
-blast_sepolia = { key = "${BLASTSCAN_API_KEY}", chain = "168587773", url = "${BLASTSCAN_API_URL}" }
-mantle_sepolia = { key = "${MANTLESCAN_API_KEY}", chain = "5003", url = "${MANTLESCAN_API_URL}" }
-scroll_sepolia = { key = "${SCROLLSCAN_API_KEY}", chain = "534351", url = "${SCROLLSCAN_API_URL}" }
 bsc_testnet = { key = "${BSCSCAN_API_KEY}", chain = "97", url = "${BSCSCAN_TESTNET_API_URL}" }
+base_sepolia = { key = "${BASESCAN_API_KEY}", chain = "84532", url = "${BASESCAN_API_URL}" }
+arbitrum_sepolia = { key = "${ARBITRUMSCAN_API_KEY}", chain = "421614", url = "${ARBITRUMSCAN_API_URL}" }
+avalanche_fuji = { key = "${SNOWSCAN_API_KEY}", chain = "43113", url = "${SNOWSCAN_API_URL}" }
+polygon_amoy = { key = "${POLYGONSCAN_API_KEY}", chain = "80002", url = "${POLYGONSCAN_API_URL}" }
+sonic_blaze = { key = "${SONICSCAN_API_KEY}", chain = "57054", url = "${SONICSCAN_API_URL}" }
+optimistic_sepolia = { key = "${OPTIMISTICSCAN_API_KEY}", chain = "11155420", url = "${OPTIMISTICSCAN_API_URL}" }
+zksync_sepolia = { key = "${ZKSYNCSCAN_API_KEY}", chain = "300", url = "${ZKSYNCSCAN_API_URL}" }
+linea_sepolia = { key = "${LINEASCAN_API_KEY}", chain = "59141", url = "${LINEASCAN_API_URL}" }
+blast_sepolia = { key = "${BLASTSCAN_API_KEY}", chain = "168587773", url = "${BLASTSCAN_API_URL}" }
+scroll_sepolia = { key = "${SCROLLSCAN_API_KEY}", chain = "534351", url = "${SCROLLSCAN_API_URL}" }
+
 bsc_mainnet = { key = "${BSCSCAN_API_KEY}", chain = "56", url = "${BSCSCAN_API_URL}" }
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
