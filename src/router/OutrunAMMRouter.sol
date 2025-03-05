@@ -30,7 +30,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
 
     receive() external payable {
         // only accept ETH via fallback from the WETH contract
-        require(msg.sender == WETH, InvaildETHSender());
+        require(msg.sender == WETH, InvalidETHSender());
     }
 
     /**
