@@ -16,31 +16,39 @@ contract OutrunAMMScript is BaseScript {
     address internal OUTRUN_DEPLOYER;
     address internal pairImplementation;
 
-    address internal WETH;
+    mapping(uint256 chainId => address) public WETHs;
 
     function run() public broadcaster {
         owner = vm.envAddress("OWNER");
         feeTo = vm.envAddress("FEE_TO");
         OUTRUN_DEPLOYER = vm.envAddress("OUTRUN_DEPLOYER");
         pairImplementation = vm.envAddress("PAIR_IMPLEMENTATION");
-
+        _chainsInit();
         // _deployPairImplementation(0);
 
-        _deploy(0);
+        _deploy(1);
         
         // ReferralManager
         // referralManager = address(new ReferralManager(owner));
         // console.log("ReferralManager deployed on %s", referralManager);
     }
 
+    function _chainsInit() internal {
+        WETHs[97] = vm.envAddress("BSC_TESTNET_WBNB");
+        WETHs[84532] = vm.envAddress("BASE_SEPOLIA_WETH");
+        WETHs[421614] = vm.envAddress("ARBITRUM_SEPOLIA_WETH");
+        WETHs[43113] = vm.envAddress("AVALANCHE_FUJI_WAVAX");
+        WETHs[80002] = vm.envAddress("POLYGON_AMOY_WPOL");
+        WETHs[57054] = vm.envAddress("SONIC_BLAZE_WS");
+        WETHs[168587773] = vm.envAddress("BLAST_SEPOLIA_WETH");
+        WETHs[534351] = vm.envAddress("SCROLL_SEPOLIA_WETH");
+        WETHs[10143] = vm.envAddress("MONAD_TESTNET_WMOD");
+        // WETHs[11155420] = vm.envAddress("OPTIMISTIC_SEPOLIA_WETH");
+        // WETHs[300] = vm.envAddress("ZKSYNC_SEPOLIA_WETH");
+        // WETHs[59141] = vm.envAddress("LINEA_SEPOLIA_WETH");
+    }
+
     function _deploy(uint256 nonce) internal {
-        if (block.chainid == vm.envUint("BASE_SEPOLIA_CHAINID")) {
-            WETH = vm.envAddress("BASE_SEPOLIA_WETH");
-        } else if (block.chainid == vm.envUint("SCROLL_SEPOLIA_CHAINID")) {
-            WETH = vm.envAddress("SCROLL_SEPOLIA_WETH");
-        } else if (block.chainid == vm.envUint("BSC_TESTNET_CHAINID")) {
-            WETH = vm.envAddress("BSC_TESTNET_WBNB");
-        }
 
         // // 0.3% fee
         // address factory0 = _deployFactory(30, nonce);
@@ -79,7 +87,7 @@ contract OutrunAMMScript is BaseScript {
         bytes32 salt = keccak256(abi.encodePacked("OutrunAMMRouter", nonce));
         bytes memory creationCode = abi.encodePacked(
             type(OutrunAMMRouter).creationCode,
-            abi.encode(factory0, factory01, WETH)
+            abi.encode(factory0, factory01, WETHs[block.chainid])
         );
         address routerAddr = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
 

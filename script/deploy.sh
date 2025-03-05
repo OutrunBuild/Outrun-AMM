@@ -31,7 +31,7 @@ forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url avalanche_fuji \
     --verify
 
 forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url polygon_amoy \
-    --with-gas-price 40000000000 \
+    --priority-gas-price 40000000000 --with-gas-price 50000000000 \
     --optimize --optimizer-runs 100000 \
     --via-ir \
     --broadcast --ffi -vvvv \
