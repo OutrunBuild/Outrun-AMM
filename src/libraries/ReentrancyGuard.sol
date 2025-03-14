@@ -2,17 +2,18 @@
 pragma solidity ^0.8.28;
 
 /**
- * @dev Outrun's ReentrancyGuard implementation, support transient variable. Modified from @openzeppelin implementation
+ * @dev Outrun's ReentrancyGuard implementation, support transient variable.
  */
 abstract contract ReentrancyGuard {
-    bool transient locked;
-
+    // evm_version = cancun
+    // bool transient locked;
+    uint256 private locked = 1;
     error ReentrancyGuardReentrantCall();
 
     modifier nonReentrant() {
-        require(!locked, ReentrancyGuardReentrantCall());
-        locked = true;
+        require(locked == 1, ReentrancyGuardReentrantCall());
+        locked = 2;
         _;
-        locked = false;
+        locked = 1;
     }
 }
