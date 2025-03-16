@@ -1,6 +1,4 @@
 source ../.env
-forge clean
-forge build
 
 forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url bsc_testnet \
     --with-gas-price 3000000000 \
@@ -10,7 +8,7 @@ forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url bsc_testnet \
     --verify 
 
 forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url base_sepolia \
-    --with-gas-price 100000000 \
+    --priority-gas-price 2000000 --with-gas-price 150000000 \
     --optimize --optimizer-runs 100000 \
     --via-ir \
     --broadcast --ffi -vvvv \

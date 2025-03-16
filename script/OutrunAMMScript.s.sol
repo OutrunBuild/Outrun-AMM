@@ -24,9 +24,9 @@ contract OutrunAMMScript is BaseScript {
         OUTRUN_DEPLOYER = vm.envAddress("OUTRUN_DEPLOYER");
         pairImplementation = vm.envAddress("PAIR_IMPLEMENTATION");
         _chainsInit();
-        // _deployPairImplementation(0);
+        // _deployPairImplementation(1);
 
-        _deploy(0);
+        _deploy(1);
         
         // ReferralManager
         // referralManager = address(new ReferralManager(owner));
@@ -49,10 +49,7 @@ contract OutrunAMMScript is BaseScript {
     }
 
     function _deploy(uint256 nonce) internal {
-
-        // // 0.3% fee
-        // address factory0 = _deployFactory(30, nonce);
-
+        // 0.3% fee
         address factory0 = _deployFactory(30, nonce);
 
         // 1% fee
