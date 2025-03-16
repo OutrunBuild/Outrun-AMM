@@ -66,8 +66,8 @@ forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url monad_testnet \
     --verify --verifier sourcify \
     --verifier-url 'https://sourcify-api-monad.blockvision.org'
 
-# forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url optimistic_sepolia \
-#     --with-gas-price 1100000 \
+# forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url linea_sepolia \
+#     --priority-gas-price 49000000 --with-gas-price 50000000 \
 #     --optimize --optimizer-runs 100000 \
 #     --via-ir \
 #     --broadcast --ffi -vvvv \
@@ -75,13 +75,6 @@ forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url monad_testnet \
 
 # forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url zksync_sepolia \
 #     --with-gas-price 25000000 \
-#     --optimize --optimizer-runs 100000 \
-#     --via-ir \
-#     --broadcast --ffi -vvvv \
-#     --verify
-
-# forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url linea_sepolia \
-#     --with-gas-price 700000000 \
 #     --optimize --optimizer-runs 100000 \
 #     --via-ir \
 #     --broadcast --ffi -vvvv \
