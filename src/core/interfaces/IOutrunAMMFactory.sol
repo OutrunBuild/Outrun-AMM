@@ -15,7 +15,7 @@ interface IOutrunAMMFactory {
     function getPair(address tokenA, address tokenB) external view returns (address pair);
 
 
-    function createPair(address tokenA, address tokenB) external returns (address pair);
+    function createPair(address tokenA, address tokenB, bool fairMode, uint256 fairBlockNum) external returns (address pair);
 
     function setFeeTo(address) external;
 
@@ -24,8 +24,17 @@ interface IOutrunAMMFactory {
 
     error PairExists();
 
+    error ShortDuration();
+
     error IdenticalAddresses();
     
 
-    event PairCreated(address indexed token0, address indexed token1, address pair, uint256);
+    event PairCreated(
+        address indexed token0, 
+        address indexed token1, 
+        address pair, 
+        uint256 allPairsLength, 
+        bool indexed fairMode, 
+        uint256 fairBlockCount
+    );
 }

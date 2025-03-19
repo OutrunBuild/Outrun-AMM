@@ -12,6 +12,7 @@ import {ReentrancyGuard} from "../libraries/ReentrancyGuard.sol";
 import {IOutrunAMMCallee} from "./interfaces/IOutrunAMMCallee.sol";
 import {IOutrunAMMFactory} from "./interfaces/IOutrunAMMFactory.sol";
 import {IOutrunAMMERC20, OutrunAMMERC20} from "./OutrunAMMERC20.sol";
+import {IFairModeExecutor} from "./interfaces/IFairModeExecutor.sol";
 
 contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initializable {
     using UQ112x112 for uint224;
@@ -19,6 +20,10 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes("transfer(address,uint256)")));
     uint256 public constant RATIO = 10000;
     uint256 public constant MINIMUM_LIQUIDITY = 1000;
+
+    bool public fairMode;
+    uint256 public initBlockNum;
+    address public fairModeExecutor;
 
     address public factory;
     address public token0;
@@ -68,14 +73,19 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
     function initialize(
         address _token0, 
         address _token1, 
-        uint256 _swapFeeRate
+        address _fairModeExecutor,
+        uint256 _swapFeeRate,
+        bool _fairMode
     ) external initializer {
         require(_swapFeeRate < RATIO, FeeRateOverflow());
 
         token0 = _token0;
         token1 = _token1;
+        fairModeExecutor = _fairModeExecutor;
         swapFeeRate = _swapFeeRate;
+        fairMode = _fairMode;
         factory = msg.sender;
+        initBlockNum = block.number;
     }
 
     /**
@@ -153,6 +163,8 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
         require(amount0Out > 0 || amount1Out > 0, InsufficientOutputAmount());
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
         require(amount0Out < _reserve0 && amount1Out < _reserve1, InsufficientLiquidity());
+
+        if (fairMode) IFairModeExecutor(fairModeExecutor).fairProcess(_reserve0, _reserve1, amount0Out, amount1Out);
 
         uint256 balance0;
         uint256 balance1;
