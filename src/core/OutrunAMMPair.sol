@@ -22,7 +22,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
     uint256 public constant MINIMUM_LIQUIDITY = 1000;
 
     bool public fairMode;
-    uint256 public initBlockNum;
+    uint256 public fairBlockNum;
     address public fairModeExecutor;
 
     address public factory;
@@ -75,6 +75,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
         address _token1, 
         address _fairModeExecutor,
         uint256 _swapFeeRate,
+        uint256 _fairBlockNum,
         bool _fairMode
     ) external initializer {
         require(_swapFeeRate < RATIO, FeeRateOverflow());
@@ -85,7 +86,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
         swapFeeRate = _swapFeeRate;
         fairMode = _fairMode;
         factory = msg.sender;
-        initBlockNum = block.number;
+        if (_fairMode) fairBlockNum = _fairBlockNum;
     }
 
     /**
@@ -159,17 +160,25 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
      * @param referrer - Address of rebate referrer
      * @notice - this low-level function should be called from a contract which performs important safety checks
      */
-    function swap(uint256 amount0Out, uint256 amount1Out, address to, address referrer, bytes calldata data) external nonReentrant {
+    function swap(uint256 amount0Out, uint256 amount1Out, address to, address referrer, bytes calldata data) external nonReentrant returns (bool) {
         require(amount0Out > 0 || amount1Out > 0, InsufficientOutputAmount());
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
         require(amount0Out < _reserve0 && amount1Out < _reserve1, InsufficientLiquidity());
+        
+        address _token0 = token0;
+        address _token1 = token1;
+        uint256 amount0In = IERC20(_token0).balanceOf(address(this)) - _reserve0;
+        uint256 amount1In = IERC20(_token1).balanceOf(address(this)) - _reserve1;
 
-        if (fairMode) IFairModeExecutor(fairModeExecutor).fairProcess(_reserve0, _reserve1, amount0Out, amount1Out);
+        // The execution can only continue if the fair process passes
+        if (fairMode && block.number < fairBlockNum && !IFairModeExecutor(fairModeExecutor).fairProcess(_reserve0, _reserve1, amount0Out, amount1Out)) {
+            if (amount0In != 0) _safeTransfer(_token0, msg.sender, amount0In);
+            if (amount1In != 0) _safeTransfer(_token1, msg.sender, amount1In);
+            return false;
+        }
 
         uint256 balance0;
         uint256 balance1;
-        address _token0 = token0;
-        address _token1 = token1;
         {
             require(to != _token0 && to != _token1, InvalidTo());
 
@@ -180,8 +189,6 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
             balance1 = IERC20(_token1).balanceOf(address(this));
         }
 
-        uint256 amount0In;
-        uint256 amount1In;
         unchecked {
             amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
             amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
@@ -220,6 +227,8 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
 
         emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
         emit ProtocolFee(referrer, rebateFee0, rebateFee1, protocolFee0, protocolFee1);
+
+        return true;
     }
 
     /**

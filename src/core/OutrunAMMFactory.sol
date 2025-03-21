@@ -43,8 +43,8 @@ contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
 
         bytes32 salt = keccak256(abi.encodePacked(token0, token1, swapFeeRate));
         pair = Clones.cloneDeterministic(pairImplementation, salt);
-        IOutrunAMMPair(pair).initialize(token0, token1, fairModeExecutor, swapFeeRate, fairMode);
-        if(fairMode) IFairModeExecutor(fairModeExecutor).setFairBlockNum(pair, fairBlockCount);
+        IOutrunAMMPair(pair).initialize(token0, token1, fairModeExecutor, swapFeeRate, block.number + fairBlockCount, fairMode);
+        if(fairMode) IFairModeExecutor(fairModeExecutor).setFairPair(pair);
         
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction

@@ -180,9 +180,12 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
             uint256 amountOut = amounts[i + 1];
             (uint256 amount0Out, uint256 amount1Out) = input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));
             address to = i < path.length - 2 ? OutrunAMMLibrary.pairFor(factories[feeRates[i + 1]], output, path[i + 2], feeRates[i + 1]) : _to;
-            IOutrunAMMPair(OutrunAMMLibrary.pairFor(factories[feeRates[i]], input, output, feeRates[i])).swap(
-                amount0Out, amount1Out, to, referrer, new bytes(0)
-            );
+            if (!IOutrunAMMPair(OutrunAMMLibrary.pairFor(factories[feeRates[i]], input, output, feeRates[i]))
+                                                .swap(amount0Out, amount1Out, to, referrer, new bytes(0))) {
+                TransferHelper.safeTransfer(input, to, amounts[i]);
+                emit SwapPartially(path[0], input, amounts[0], amounts[i]);
+                return;
+            }
         }
     }
 

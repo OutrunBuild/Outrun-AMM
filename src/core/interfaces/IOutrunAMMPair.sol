@@ -25,13 +25,13 @@ interface IOutrunAMMPair {
     function previewMakerFee() external view returns (uint256 amount0, uint256 amount1);
 
 
-    function initialize(address token0, address token1, address fairModeExecutor, uint256 swapFeeRate, bool fairMode) external;
+    function initialize(address token0, address token1, address fairModeExecutor, uint256 swapFeeRate, uint256 fairBlockNum, bool fairMode) external;
 
     function mint(address to) external returns (uint256 liquidity);
 
     function burn(address to) external returns (uint256 amount0, uint256 amount1);
 
-    function swap(uint256 amount0Out, uint256 amount1Out, address to, address referrer, bytes calldata data) external;
+    function swap(uint256 amount0Out, uint256 amount1Out, address to, address referrer, bytes calldata data) external returns (bool);
 
     function skim(address to) external;
 
