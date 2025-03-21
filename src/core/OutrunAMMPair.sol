@@ -172,8 +172,9 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
 
         // The execution can only continue if the fair process passes
         if (fairMode && block.number < fairBlockNum && !IFairModeExecutor(fairModeExecutor).fairProcess(_reserve0, _reserve1, amount0Out, amount1Out)) {
-            if (amount0In != 0) _safeTransfer(_token0, msg.sender, amount0In);
-            if (amount1In != 0) _safeTransfer(_token1, msg.sender, amount1In);
+            if (amount0In != 0) _safeTransfer(_token0, to, amount0In);
+            if (amount1In != 0) _safeTransfer(_token1, to, amount1In);
+            emit SwapInterrupted(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
             return false;
         }
 

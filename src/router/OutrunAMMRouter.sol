@@ -46,7 +46,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 amountBMin,
         bool fairMode,
         uint256 fairBlockCount
-    ) internal virtual returns (uint256 amountA, uint256 amountB) {
+    ) internal returns (uint256 amountA, uint256 amountB) {
         address factory = factories[feeRate];
         // create the pair if it doesn't exist yet
         if (IOutrunAMMFactory(factory).getPair(tokenA, tokenB) == address(0)) {
@@ -81,7 +81,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 deadline,
         bool fairMode,
         uint256 fairBlockCount
-    ) external virtual override ensure(deadline) returns (uint256 amountA, uint256 amountB, uint256 liquidity) {
+    ) external override ensure(deadline) returns (uint256 amountA, uint256 amountB, uint256 liquidity) {
         (amountA, amountB) = _addLiquidity(tokenA, tokenB, feeRate, amountADesired, amountBDesired, amountAMin, amountBMin, fairMode, fairBlockCount);
         address pair = OutrunAMMLibrary.pairFor(factories[feeRate], tokenA, tokenB, feeRate);
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
@@ -99,7 +99,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 deadline,
         bool fairMode,
         uint256 fairBlockCount
-    ) external payable virtual override ensure(deadline) returns (uint256 amountToken, uint256 amountETH, uint256 liquidity) {
+    ) external payable override ensure(deadline) returns (uint256 amountToken, uint256 amountETH, uint256 liquidity) {
         (amountToken, amountETH) = _addLiquidity(token, WETH, feeRate, amountTokenDesired, msg.value, amountTokenMin, amountETHMin, fairMode, fairBlockCount);
         address pair = OutrunAMMLibrary.pairFor(factories[feeRate], token, WETH, feeRate);
         TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
@@ -120,7 +120,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 amountBMin,
         address to,
         uint256 deadline
-    ) public virtual override ensure(deadline) returns (uint256 amountA, uint256 amountB) {
+    ) public override ensure(deadline) returns (uint256 amountA, uint256 amountB) {
         address pair = OutrunAMMLibrary.pairFor(factories[feeRate], tokenA, tokenB, feeRate);
         IOutrunAMMERC20(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
         (uint256 amount0, uint256 amount1) = IOutrunAMMPair(pair).burn(to);
@@ -138,7 +138,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 amountETHMin,
         address to,
         uint256 deadline
-    ) public virtual override ensure(deadline) returns (uint256 amountToken, uint256 amountETH) {
+    ) external override ensure(deadline) returns (uint256 amountToken, uint256 amountETH) {
         (amountToken, amountETH) = removeLiquidity(token, WETH, feeRate, liquidity, amountTokenMin, amountETHMin, address(this), deadline);
         TransferHelper.safeTransfer(token, to, amountToken);
         IWETH(WETH).withdraw(amountETH);
@@ -156,7 +156,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 amountETHMin,
         address to,
         uint256 deadline
-    ) public virtual override ensure(deadline) returns (uint256 amountETH) {
+    ) external override ensure(deadline) returns (uint256 amountETH) {
         (, amountETH) = removeLiquidity(token, WETH, feeRate, liquidity, amountTokenMin, amountETHMin, address(this), deadline);
         TransferHelper.safeTransfer(token, to, IERC20(token).balanceOf(address(this)));
         IWETH(WETH).withdraw(amountETH);
@@ -173,20 +173,16 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256[] memory feeRates, 
         address _to, 
         address referrer
-    ) internal virtual {
+    ) internal returns (bool) {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0,) = OutrunAMMLibrary.sortTokens(input, output);
             uint256 amountOut = amounts[i + 1];
             (uint256 amount0Out, uint256 amount1Out) = input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));
             address to = i < path.length - 2 ? OutrunAMMLibrary.pairFor(factories[feeRates[i + 1]], output, path[i + 2], feeRates[i + 1]) : _to;
-            if (!IOutrunAMMPair(OutrunAMMLibrary.pairFor(factories[feeRates[i]], input, output, feeRates[i]))
-                                                .swap(amount0Out, amount1Out, to, referrer, new bytes(0))) {
-                TransferHelper.safeTransfer(input, to, amounts[i]);
-                emit SwapPartially(path[0], input, amounts[0], amounts[i]);
-                return;
-            }
+            if (!IOutrunAMMPair(OutrunAMMLibrary.pairFor(factories[feeRates[i]], input, output, feeRates[i])).swap(amount0Out, amount1Out, to, referrer, new bytes(0))) return false;
         }
+        return true;
     }
 
     function swapExactTokensForTokens(
@@ -197,7 +193,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         address to,
         address referrer,
         uint256 deadline
-    ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    ) external override ensure(deadline) returns (uint256[] memory amounts) {
         amounts = getAmountsOut(amountIn, path, feeRates);
         require(amounts[amounts.length - 1] >= amountOutMin, InsufficientOutputAmount());
         TransferHelper.safeTransferFrom(
@@ -214,7 +210,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         address to,
         address referrer,
         uint256 deadline
-    ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    ) external override ensure(deadline) returns (uint256[] memory amounts) {
         amounts = getAmountsIn( amountOut, path, feeRates);
         require(amounts[0] <= amountInMax, ExcessiveInputAmount());
         TransferHelper.safeTransferFrom(
@@ -230,7 +226,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         address to,
         address referrer,
         uint256 deadline
-    ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    ) external payable override ensure(deadline) returns (uint256[] memory amounts) {
         require(path[0] == WETH, InvalidPath());
         amounts = getAmountsOut(msg.value, path, feeRates);
         require(amounts[amounts.length - 1] >= amountOutMin, InsufficientOutputAmount());
@@ -247,16 +243,17 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         address to,
         address referrer,
         uint256 deadline
-    ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    ) external override ensure(deadline) returns (uint256[] memory amounts) {
         require(path[path.length - 1] == WETH, InvalidPath());
         amounts = getAmountsIn(amountOut, path, feeRates);
         require(amounts[0] <= amountInMax, ExcessiveInputAmount());
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amounts[0]
         );
-        _swap(amounts, path, feeRates, address(this), referrer);
-        IWETH(WETH).withdraw(amounts[amounts.length - 1]);
-        TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
+        if (_swap(amounts, path, feeRates, address(this), referrer)) {
+            IWETH(WETH).withdraw(amounts[amounts.length - 1]);
+            TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
+        }
     }
 
     function swapExactTokensForETH(
@@ -267,16 +264,17 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         address to,
         address referrer,
         uint256 deadline
-    ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    ) external override ensure(deadline) returns (uint256[] memory amounts) {
         require(path[path.length - 1] == WETH, InvalidPath());
         amounts = getAmountsOut(amountIn, path, feeRates);
         require(amounts[amounts.length - 1] >= amountOutMin, InsufficientOutputAmount());
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amounts[0]
         );
-        _swap(amounts, path, feeRates, address(this), referrer);
-        IWETH(WETH).withdraw(amounts[amounts.length - 1]);
-        TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
+        if(_swap(amounts, path, feeRates, address(this), referrer)) {
+            IWETH(WETH).withdraw(amounts[amounts.length - 1]);
+            TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
+        }
     }
 
     function swapETHForExactTokens(
@@ -286,7 +284,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         address to,
         address referrer,
         uint256 deadline
-    ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    ) external payable override ensure(deadline) returns (uint256[] memory amounts) {
         require(path[0] == WETH, InvalidPath());
         amounts = getAmountsIn(amountOut, path, feeRates);
         require(amounts[0] <= msg.value, ExcessiveInputAmount());
@@ -301,7 +299,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
      * SWAP (supporting fee-on-transfer tokens) *
      */
     // requires the initial amount to have already been sent to the first pair
-    function _swapSupportingFeeOnTransferTokens(address[] memory path, uint256[] memory feeRates, address _to, address referrer) internal virtual {
+    function _swapSupportingFeeOnTransferTokens(address[] memory path, uint256[] memory feeRates, address _to, address referrer) internal returns (bool) {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0,) = OutrunAMMLibrary.sortTokens(input, output);
@@ -317,8 +315,9 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
             }
             (uint256 amount0Out, uint256 amount1Out) = input == token0 ? (uint256(0), amountOutput) : (amountOutput, uint256(0));
             address to = i < path.length - 2 ? OutrunAMMLibrary.pairFor(factories[feeRates[i + 1]], output, path[i + 2], feeRates[i + 1]) : _to;
-            pair.swap(amount0Out, amount1Out, to, referrer, new bytes(0));
+            if(!pair.swap(amount0Out, amount1Out, to, referrer, new bytes(0))) return false;
         }
+        return true;
     }
 
     function swapExactTokensForTokensSupportingFeeOnTransferTokens(
@@ -329,7 +328,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         address to,
         address referrer,
         uint256 deadline
-    ) external virtual override ensure(deadline) {
+    ) external override ensure(deadline) {
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amountIn
         );
@@ -348,7 +347,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         address to,
         address referrer,
         uint256 deadline
-    ) external payable virtual override ensure(deadline) {
+    ) external payable override ensure(deadline) {
         require(path[0] == WETH, InvalidPath());
         uint256 amountIn = msg.value;
         IWETH(WETH).deposit{value: amountIn}();
@@ -369,16 +368,17 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         address to,
         address referrer,
         uint256 deadline
-    ) external virtual override ensure(deadline) {
+    ) external override ensure(deadline) {
         require(path[path.length - 1] == WETH, InvalidPath());
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amountIn
         );
-        _swapSupportingFeeOnTransferTokens(path, feeRates, address(this), referrer);
-        uint256 amountOut = IERC20(WETH).balanceOf(address(this));
-        require(amountOut >= amountOutMin, InsufficientOutputAmount());
-        IWETH(WETH).withdraw(amountOut);
-        TransferHelper.safeTransferETH(to, amountOut);
+        if(_swapSupportingFeeOnTransferTokens(path, feeRates, address(this), referrer)) {
+            uint256 amountOut = IERC20(WETH).balanceOf(address(this));
+            require(amountOut >= amountOutMin, InsufficientOutputAmount());
+            IWETH(WETH).withdraw(amountOut);
+            TransferHelper.safeTransferETH(to, amountOut);
+        }
     }
 
     // **** LIBRARY FUNCTIONS ****
@@ -386,7 +386,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 amountA, 
         uint256 reserveA, 
         uint256 reserveB
-    ) public view virtual override returns (uint256 amountB) {
+    ) public pure override returns (uint256 amountB) {
         require(amountA > 0, InsufficientAmount());
         require(reserveA > 0 && reserveB > 0, InsufficientLiquidity());
         amountB = amountA * reserveB / reserveA;
@@ -397,7 +397,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         address tokenA, 
         address tokenB,
         uint256 feeRate
-    ) public view virtual override returns (uint256 reserveA, uint256 reserveB) {
+    ) public view override returns (uint256 reserveA, uint256 reserveB) {
         (address token0,) = OutrunAMMLibrary.sortTokens(tokenA, tokenB);
         (uint256 reserve0, uint256 reserve1,) = IOutrunAMMPair(OutrunAMMLibrary.pairFor(factory, tokenA, tokenB, feeRate)).getReserves();
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
@@ -408,7 +408,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 reserveIn, 
         uint256 reserveOut, 
         uint256 feeRate
-    ) public view virtual override returns (uint256 amountOut) {
+    ) public pure override returns (uint256 amountOut) {
         require(amountIn > 0, InsufficientInputAmount());
         require(reserveIn > 0 && reserveOut > 0, InsufficientLiquidity());
         uint256 amountInWithFee = amountIn * (RATIO - feeRate);
@@ -422,7 +422,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 reserveIn, 
         uint256 reserveOut, 
         uint256 feeRate
-    ) public view virtual override returns (uint256 amountIn) {
+    ) public pure override returns (uint256 amountIn) {
         require(amountOut > 0, InsufficientOutputAmount());
         require(reserveIn > 0 && reserveOut > 0, InsufficientLiquidity());
         uint256 numerator = reserveIn * amountOut * RATIO;
@@ -434,7 +434,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 amountIn, 
         address[] memory path,
         uint256[] memory feeRates
-    ) public view virtual override returns (uint256[] memory amounts) {
+    ) public view override returns (uint256[] memory amounts) {
         require(
             path.length >= 2 &&
             feeRates.length >= 1 &&
@@ -454,7 +454,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 amountOut, 
         address[] memory path, 
         uint256[] memory feeRates
-    ) public view virtual override returns (uint256[] memory amounts) {
+    ) public view override returns (uint256[] memory amounts) {
         require(
             path.length >= 2 &&
             feeRates.length >= 1 &&

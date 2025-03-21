@@ -163,7 +163,7 @@ interface IOutrunAMMRouter {
         uint256 amountA, 
         uint256 reserveA, 
         uint256 reserveB
-    ) external view returns (uint256 amountB);
+    ) external pure returns (uint256 amountB);
 
     function getReserves(
         address factory, 
@@ -177,14 +177,14 @@ interface IOutrunAMMRouter {
         uint256 reserveIn, 
         uint256 reserveOut,
         uint256 feeRate
-    ) external view returns (uint256 amountOut);
+    ) external pure returns (uint256 amountOut);
 
     function getAmountIn(
         uint256 amountOut, 
         uint256 reserveIn, 
         uint256 reserveOut,
         uint256 feeRate
-    ) external view returns (uint256 amountIn);
+    ) external pure returns (uint256 amountIn);
 
     function getAmountsOut(
         uint256 amountIn, 
@@ -217,6 +217,4 @@ interface IOutrunAMMRouter {
     error InsufficientInputAmount();
 
     error InsufficientOutputAmount();
-
-    event SwapPartially(address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOut);
 }
