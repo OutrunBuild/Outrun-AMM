@@ -7,11 +7,11 @@ import {IFairModeExecutor} from "./interfaces/IFairModeExecutor.sol";
  * @dev FairModeHook for Fair Swap
  */
 contract FairModeExecutor is IFairModeExecutor {
-    mapping(address factory => bool) factories;
+    mapping(address factory => bool) public factories;
 
-    mapping(address pair => bool) fairPairs;
+    mapping(address pair => bool) public fairPairs;
 
-    mapping(uint256 blockNum => ExecutionDetail) public executionDetails;
+    mapping(uint256 blockNum => ExecutionDetail) private executionDetails;
 
     constructor(address[] memory _factories) {
         for (uint256 i = 0; i < _factories.length; i++) {
