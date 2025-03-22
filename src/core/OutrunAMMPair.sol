@@ -5,6 +5,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {UQ112x112} from "../libraries/UQ112x112.sol";
+import {IMEVGuard} from "./interfaces/IMEVGuard.sol";
 import {FixedPoint128} from "../libraries/FixedPoint128.sol";
 import {Initializable} from "../libraries/Initializable.sol";
 import {IOutrunAMMPair} from "./interfaces/IOutrunAMMPair.sol";
@@ -12,7 +13,6 @@ import {ReentrancyGuard} from "../libraries/ReentrancyGuard.sol";
 import {IOutrunAMMCallee} from "./interfaces/IOutrunAMMCallee.sol";
 import {IOutrunAMMFactory} from "./interfaces/IOutrunAMMFactory.sol";
 import {IOutrunAMMERC20, OutrunAMMERC20} from "./OutrunAMMERC20.sol";
-import {IFairModeExecutor} from "./interfaces/IFairModeExecutor.sol";
 
 contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initializable {
     using UQ112x112 for uint224;
@@ -21,9 +21,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
     uint256 public constant RATIO = 10000;
     uint256 public constant MINIMUM_LIQUIDITY = 1000;
 
-    bool public fairMode;
-    uint256 public fairBlockNum;
-    address public fairModeExecutor;
+    address public MEVGuard;
 
     address public factory;
     address public token0;
@@ -73,20 +71,16 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
     function initialize(
         address _token0, 
         address _token1, 
-        address _fairModeExecutor,
-        uint256 _swapFeeRate,
-        uint256 _fairBlockNum,
-        bool _fairMode
+        address _MEVGuard,
+        uint256 _swapFeeRate
     ) external initializer {
         require(_swapFeeRate < RATIO, FeeRateOverflow());
 
         token0 = _token0;
         token1 = _token1;
-        fairModeExecutor = _fairModeExecutor;
+        MEVGuard = _MEVGuard;
         swapFeeRate = _swapFeeRate;
-        fairMode = _fairMode;
         factory = msg.sender;
-        if (_fairMode) fairBlockNum = _fairBlockNum;
     }
 
     /**
@@ -158,9 +152,10 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
      * @param amount1Out - Amount of token0 output
      * @param to - Address to output
      * @param referrer - Address of rebate referrer
+     * @param antiMEV - Enable anti-MEV mode
      * @notice - this low-level function should be called from a contract which performs important safety checks
      */
-    function swap(uint256 amount0Out, uint256 amount1Out, address to, address referrer, bytes calldata data) external nonReentrant returns (bool) {
+    function swap(uint256 amount0Out, uint256 amount1Out, address to, address referrer, bytes calldata data, bool antiMEV) external nonReentrant returns (bool) {
         require(amount0Out > 0 || amount1Out > 0, InsufficientOutputAmount());
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
         require(amount0Out < _reserve0 && amount1Out < _reserve1, InsufficientLiquidity());
@@ -170,8 +165,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
         uint256 amount0In = IERC20(_token0).balanceOf(address(this)) - _reserve0;
         uint256 amount1In = IERC20(_token1).balanceOf(address(this)) - _reserve1;
 
-        // The execution can only continue if the fair process passes
-        if (fairMode && block.number < fairBlockNum && !IFairModeExecutor(fairModeExecutor).fairProcess(_reserve0, _reserve1, amount0Out, amount1Out)) {
+        if (!IMEVGuard(MEVGuard).execute(antiMEV, _reserve0, _reserve1, amount0Out, amount1Out)) {
             if (amount0In != 0) _safeTransfer(_token0, to, amount0In);
             if (amount1In != 0) _safeTransfer(_token1, to, amount1In);
             emit SwapInterrupted(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);

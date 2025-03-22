@@ -5,26 +5,30 @@ interface IOutrunAMMFactory {
     function swapFeeRate() external view returns (uint256);
 
     function pairImplementation() external view returns (address);
+
+    function MEVGuard() external view returns (address);
     
     function feeTo() external view returns (address);
 
     function allPairs(uint256) external view returns (address pair);
+
+    function antiFrontBlock() external view returns (uint256);
 
     function allPairsLength() external view returns (uint256);
 
     function getPair(address tokenA, address tokenB) external view returns (address pair);
 
 
-    function createPair(address tokenA, address tokenB, bool fairMode, uint256 fairBlockNum) external returns (address pair);
+    function createPair(address tokenA, address tokenB) external returns (address pair);
 
-    function setFeeTo(address) external;
+    function setFeeTo(address feeTo) external;
+
+    function setAntiFrontBlock(uint256 antiFrontBlock) external;
 
 
     error ZeroAddress();
 
     error PairExists();
-
-    error ShortDuration();
 
     error IdenticalAddresses();
     
@@ -33,8 +37,6 @@ interface IOutrunAMMFactory {
         address indexed token0, 
         address indexed token1, 
         address pair, 
-        uint256 allPairsLength, 
-        bool indexed fairMode, 
-        uint256 fairBlockCount
+        uint256 allPairsLength
     );
 }
