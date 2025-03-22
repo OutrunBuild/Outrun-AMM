@@ -4,24 +4,21 @@ pragma solidity ^0.8.28;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import {MEVGuard} from "../libraries/MEVGuard.sol";
 import {UQ112x112} from "../libraries/UQ112x112.sol";
-import {IMEVGuard} from "./interfaces/IMEVGuard.sol";
 import {FixedPoint128} from "../libraries/FixedPoint128.sol";
-import {Initializable} from "../libraries/Initializable.sol";
 import {IOutrunAMMPair} from "./interfaces/IOutrunAMMPair.sol";
 import {ReentrancyGuard} from "../libraries/ReentrancyGuard.sol";
 import {IOutrunAMMCallee} from "./interfaces/IOutrunAMMCallee.sol";
 import {IOutrunAMMFactory} from "./interfaces/IOutrunAMMFactory.sol";
 import {IOutrunAMMERC20, OutrunAMMERC20} from "./OutrunAMMERC20.sol";
 
-contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initializable {
+contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, MEVGuard {
     using UQ112x112 for uint224;
 
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes("transfer(address,uint256)")));
     uint256 public constant RATIO = 10000;
     uint256 public constant MINIMUM_LIQUIDITY = 1000;
-
-    address public MEVGuard;
 
     address public factory;
     address public token0;
@@ -71,16 +68,18 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
     function initialize(
         address _token0, 
         address _token1, 
-        address _MEVGuard,
-        uint256 _swapFeeRate
+        uint256 _swapFeeRate,
+        uint256 _antiFrontBlockEdge,
+        uint256 _antiFrontPercentage
     ) external initializer {
         require(_swapFeeRate < RATIO, FeeRateOverflow());
 
         token0 = _token0;
         token1 = _token1;
-        MEVGuard = _MEVGuard;
         swapFeeRate = _swapFeeRate;
         factory = msg.sender;
+
+        __OutrunMEVGuard_init(_antiFrontBlockEdge, _antiFrontPercentage);
     }
 
     /**
@@ -165,7 +164,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
         uint256 amount0In = IERC20(_token0).balanceOf(address(this)) - _reserve0;
         uint256 amount1In = IERC20(_token1).balanceOf(address(this)) - _reserve1;
 
-        if (!IMEVGuard(MEVGuard).execute(antiMEV, _reserve0, _reserve1, amount0Out, amount1Out)) {
+        if (!_MEVDefend(antiMEV, _reserve0, _reserve1, amount0Out, amount1Out)) {
             if (amount0In != 0) _safeTransfer(_token0, to, amount0In);
             if (amount1In != 0) _safeTransfer(_token1, to, amount1In);
             emit SwapInterrupted(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);

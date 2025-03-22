@@ -2,43 +2,35 @@
 pragma solidity ^0.8.28;
 
 import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-
-import {IMEVGuard} from "./interfaces/IMEVGuard.sol";
+import {Initializable} from "../libraries/Initializable.sol";
 
 /**
- * @dev MEV Guard
+ * @dev MEV Guard - Anti-Front Running and MEV
  */
-contract MEVGuard is IMEVGuard, Nonces, Ownable {
-    uint256 public percentageValue; // Success probability is percentageValue%
+abstract contract MEVGuard is Nonces, Initializable {
+    struct ExecutionDetail {
+        bool isExecuted;
+        uint248 nonce;
+    }
 
-    mapping(address factory => bool) public factories;
+    uint256 public antiFrontBlockEdge;
 
-    mapping(address pair => uint256) public antiFrontBlockEdges;
+    uint256 public antiFrontPercentage;
 
     mapping(uint256 blockNum => ExecutionDetail) private executionDetails;
 
-    constructor(
-        address _owner, 
-        uint256 _percentageValue,
-        address[] memory _factories
-    ) Ownable(_owner) {
-        percentageValue = _percentageValue;
-        for (uint256 i = 0; i < _factories.length; i++) {
-            factories[_factories[i]] = true;
-        }
+    function __OutrunMEVGuard_init(uint256 _antiFrontBlockEdge, uint256 _antiFrontPercentage) internal onlyInitializing {
+        antiFrontBlockEdge = _antiFrontBlockEdge;
+        antiFrontPercentage = _antiFrontPercentage;
     }
 
-    function execute(
+    function _MEVDefend(
         bool antiMEV,
         uint256 reserve0, 
         uint256 reserve1,
         uint256 amount0Out,
         uint256 amount1Out
-    ) external override returns (bool) {
-        uint256 antiFrontBlockEdge = antiFrontBlockEdges[msg.sender];
-        require(antiFrontBlockEdge != 0, PermissionDenied());
-        
+    ) internal returns (bool) {
         uint256 currentBlockNum = block.number;
 
         // Only one transaction can succeed per block before antiFrontBlockEdge, or the previous 
@@ -69,26 +61,13 @@ contract MEVGuard is IMEVGuard, Nonces, Ownable {
                 _useNonce(tx.origin)
             )));
             
-            if (pseudoRandomNum % 100 <= percentageValue) executionDetails[currentBlockNum].isExecuted == true;
+            // Success probability is antiFrontPercentage%
+            if (pseudoRandomNum % 100 <= antiFrontPercentage) executionDetails[currentBlockNum].isExecuted == true;
         } else if (antiMEV) {
             // Prevent subsequent transactions of the same trading pair in the current block.
             executionDetails[currentBlockNum].isExecuted == true;
         }
 
         return true;
-    }
-
-    function setPercentageValue(uint256 _percentageValue) external override onlyOwner {
-        percentageValue = _percentageValue;
-    }
-
-
-    function setFactory(address factory) external override onlyOwner {
-        factories[factory] = true;
-    }
-
-    function setAntiFrontBlockEdge(address pair, uint256 antiFrontBlockEdge) external override {
-        require(factories[msg.sender], PermissionDenied());
-        antiFrontBlockEdges[pair] = antiFrontBlockEdge;
     }
 }

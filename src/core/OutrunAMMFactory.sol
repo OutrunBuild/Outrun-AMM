@@ -4,32 +4,31 @@ pragma solidity ^0.8.28;
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {IMEVGuard} from "./interfaces/IMEVGuard.sol";
 import {IOutrunAMMPair, OutrunAMMPair} from "./OutrunAMMPair.sol";
 import {IOutrunAMMFactory} from "./interfaces/IOutrunAMMFactory.sol";
 
 contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
     uint256 public immutable swapFeeRate;
     address public immutable pairImplementation;
-    address public immutable MEVGuard;
 
     address public feeTo;
     address[] public allPairs;
     uint256 public antiFrontBlock;
+    uint256 public antiFrontPercentage;
     
     mapping(address => mapping(address => address)) public getPair;
 
     constructor(
         address owner_, 
-        address pairImplementation_, 
-        address MEVGuard_,
+        address pairImplementation_,
         uint256 swapFeeRate_,
-        uint256 antiFrontBlock_
+        uint256 antiFrontBlock_,
+        uint256 antiFrontPercentage_
     ) Ownable(owner_) {
         swapFeeRate = swapFeeRate_;
         pairImplementation = pairImplementation_;
-        MEVGuard = MEVGuard_;
         antiFrontBlock = antiFrontBlock_;
+        antiFrontPercentage = antiFrontPercentage_;
     }
 
     function allPairsLength() external view override returns (uint256) {
@@ -45,8 +44,7 @@ contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
 
         bytes32 salt = keccak256(abi.encodePacked(token0, token1, swapFeeRate));
         pair = Clones.cloneDeterministic(pairImplementation, salt);
-        IOutrunAMMPair(pair).initialize(token0, token1, MEVGuard, swapFeeRate);
-        IMEVGuard(MEVGuard).setAntiFrontBlockEdge(pair, block.number + antiFrontBlock);
+        IOutrunAMMPair(pair).initialize(token0, token1, swapFeeRate, block.number + antiFrontBlock, antiFrontPercentage);
         
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction
@@ -61,5 +59,9 @@ contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
 
     function setAntiFrontBlock(uint256 _antiFrontBlock) external override onlyOwner {
         antiFrontBlock = _antiFrontBlock;
+    }
+
+    function setAntiFrontPercentage(uint256 _antiFrontPercentage) external override onlyOwner {
+        antiFrontPercentage = _antiFrontPercentage;
     }
 }

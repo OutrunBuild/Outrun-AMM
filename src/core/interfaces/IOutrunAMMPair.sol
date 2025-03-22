@@ -25,7 +25,7 @@ interface IOutrunAMMPair {
     function previewMakerFee() external view returns (uint256 amount0, uint256 amount1);
 
 
-    function initialize(address token0, address token1, address MEVGuard, uint256 swapFeeRate) external;
+    function initialize(address token0, address token1, uint256 swapFeeRate, uint256 antiFrontBlockEdge, uint256 antiFrontPercentage) external;
 
     function mint(address to) external returns (uint256 liquidity);
 
