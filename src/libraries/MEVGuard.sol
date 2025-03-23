@@ -43,8 +43,9 @@ abstract contract MEVGuard is Initializable {
             if (amount0Out * 100 >  reserve0 || amount1Out * 100 > reserve1) return false;
 
             // Integrating VRF into the Swap process significantly degrades the user experience. 
-            // Pseudorandom numbers are sufficient because the parameters for generating random 
-            // numbers are complex enough.
+            // Pseudorandom numbers are already sufficient, but using VRF instead makes it cheaper 
+            // for attackers, as they can conduct transactions with multiple addresses and avoid 
+            // gas bidding.
             uint256 pseudoRandomNum = uint256(keccak256(abi.encodePacked(
                 tx.origin,
                 block.coinbase,
