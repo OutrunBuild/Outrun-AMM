@@ -195,8 +195,9 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, MEVGu
         uint256 protocolFee1;
         uint256 _swapFeeRate = swapFeeRate;
         {
-            uint256 balance0Adjusted = balance0 * RATIO - amount0In * _swapFeeRate;
-            uint256 balance1Adjusted = balance1 * RATIO - amount1In * _swapFeeRate;
+            uint256 realSwapFeeRate = antiMEV ? _realSwapFeeRate(_swapFeeRate) : _swapFeeRate;
+            uint256 balance0Adjusted = balance0 * RATIO - amount0In * realSwapFeeRate;
+            uint256 balance1Adjusted = balance1 * RATIO - amount1In * realSwapFeeRate;
             
             require(
                 balance0Adjusted * balance1Adjusted >= uint256(_reserve0) * uint256(_reserve1) * RATIO ** 2,
@@ -204,8 +205,8 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, MEVGu
             );
 
             address feeTo = _feeTo();
-            (balance0, rebateFee0, protocolFee0) = _transferRebateAndProtocolFee(amount0In, balance0, _token0, referrer, feeTo);
-            (balance1, rebateFee1, protocolFee1) = _transferRebateAndProtocolFee(amount1In, balance1, _token1, referrer, feeTo);
+            (balance0, rebateFee0, protocolFee0) = _transferRebateAndProtocolFee(amount0In, balance0, realSwapFeeRate, _token0, referrer, feeTo);
+            (balance1, rebateFee1, protocolFee1) = _transferRebateAndProtocolFee(amount1In, balance1, realSwapFeeRate, _token1, referrer, feeTo);
         }
 
         _update(balance0, balance1, _reserve0, _reserve1);
@@ -314,6 +315,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, MEVGu
     function _transferRebateAndProtocolFee(
         uint256 amountIn,
         uint256 balance,
+        uint256 realSwapFeeRate,
         address token,
         address referrer,
         address feeTo
@@ -322,17 +324,16 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, MEVGu
             return (balance, 0, 0);
         }
 
-        uint256 _swapFeeRate = swapFeeRate;
         if (referrer == address(0)) {
             // swapFee * 25% as protocolFee
             rebateFee = 0;
-            protocolFee = amountIn * _swapFeeRate / (RATIO * 4);
+            protocolFee = amountIn * realSwapFeeRate / (RATIO * 4);
             balanceAfter = balance - protocolFee;
             _safeTransfer(token, feeTo, protocolFee);
         } else {
             // swapFee * 25% * 20% as rebateFee, swapFee * 25% * 80% as protocolFee
-            rebateFee = amountIn * _swapFeeRate / (RATIO * 20);
-            protocolFee = amountIn * _swapFeeRate / (RATIO * 5);
+            rebateFee = amountIn * realSwapFeeRate / (RATIO * 20);
+            protocolFee = amountIn * realSwapFeeRate / (RATIO * 5);
             balanceAfter = balance - rebateFee - protocolFee;
             _safeTransfer(token, referrer, rebateFee);
             _safeTransfer(token, feeTo, protocolFee);
@@ -355,6 +356,10 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, MEVGu
 
     function _feeTo() internal view returns (address) {
         return IOutrunAMMFactory(factory).feeTo();
+    }
+
+    function _realSwapFeeRate(uint256 _swapFeeRate) internal view returns (uint256) {
+        return _swapFeeRate + IOutrunAMMFactory(factory).MEVGuardFeePercentage() * _swapFeeRate / 100;
     }
 
     function _beforeTokenTransfer(address from, address to, uint256) internal override {

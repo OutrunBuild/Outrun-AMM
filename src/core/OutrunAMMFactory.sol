@@ -15,6 +15,7 @@ contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
     address[] public allPairs;
     uint256 public antiFrontBlock;
     uint256 public antiFrontPercentage;
+    uint256 public MEVGuardFeePercentage;
     
     mapping(address => mapping(address => address)) public getPair;
 
@@ -23,12 +24,14 @@ contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
         address pairImplementation_,
         uint256 swapFeeRate_,
         uint256 antiFrontBlock_,
-        uint256 antiFrontPercentage_
+        uint256 antiFrontPercentage_,
+        uint256 MEVGuardFeePercentage_
     ) Ownable(owner_) {
         swapFeeRate = swapFeeRate_;
         pairImplementation = pairImplementation_;
         antiFrontBlock = antiFrontBlock_;
         antiFrontPercentage = antiFrontPercentage_;
+        MEVGuardFeePercentage = MEVGuardFeePercentage_;
     }
 
     function allPairsLength() external view override returns (uint256) {
@@ -63,5 +66,9 @@ contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
 
     function setAntiFrontPercentage(uint256 _antiFrontPercentage) external override onlyOwner {
         antiFrontPercentage = _antiFrontPercentage;
+    }
+
+    function setMEVGuardFeePercentage(uint256 _MEVGuardFeePercentage) external override onlyOwner {
+        MEVGuardFeePercentage = _MEVGuardFeePercentage;
     }
 }
