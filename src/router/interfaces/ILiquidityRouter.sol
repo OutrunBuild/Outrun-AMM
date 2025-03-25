@@ -42,8 +42,7 @@ interface ILiquidityRouter {
         uint256 amountBMax,
         address to,
         uint256 deadline
-    ) external returns (uint256, uint256);
-
+    ) external returns (uint256 amountA, uint256 amountB, uint256 liquidityOut);
 
     function quote(
         uint256 amountA, 
