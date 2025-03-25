@@ -103,18 +103,18 @@ contract LiquidityRouter is ILiquidityRouter {
         address tokenA,
         address tokenB,
         uint256 feeRate,
-        uint256 liquidity,
+        uint256 liquidityDesired,
         uint256 amountAMax,
         uint256 amountBMax,
         address to,
         uint256 deadline
-    ) external override ensure(deadline) returns (uint256 amountA, uint256 amountB, uint256 liquidityOut) {
+    ) external override ensure(deadline) returns (uint256 amountA, uint256 amountB, uint256 liquidity) {
         address pair;
-        (amountA, amountB, pair) = previewTokenIn(tokenA, tokenB, feeRate, liquidity);
+        (amountA, amountB, pair) = previewTokenIn(tokenA, tokenB, feeRate, liquidityDesired);
         require(amountA <= amountAMax && amountB <= amountBMax, ExcessiveInputAmount());
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
-        liquidityOut = IOutrunAMMPair(pair).mint(to);
+        liquidity = IOutrunAMMPair(pair).mint(to);
     }
 
     function _addLiquidity(

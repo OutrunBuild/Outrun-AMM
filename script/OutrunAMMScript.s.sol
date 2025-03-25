@@ -5,6 +5,7 @@ import "./BaseScript.s.sol";
 import {IOutrunDeployer} from "./IOutrunDeployer.sol";
 import {OutrunAMMPair} from "../src/core/OutrunAMMPair.sol";
 import {OutrunAMMERC20} from "../src/core/OutrunAMMERC20.sol";
+import {LiquidityRouter} from "../src/router/LiquidityRouter.sol";
 import {OutrunAMMRouter} from "../src/router/OutrunAMMRouter.sol";
 import {ReferralManager} from "../src/referral/ReferralManager.sol";
 import {OutrunAMMFactory, IOutrunAMMFactory} from "../src/core/OutrunAMMFactory.sol";
@@ -26,7 +27,12 @@ contract OutrunAMMScript is BaseScript {
         _chainsInit();
         // _deployPairImplementation(1);
 
-        _deploy(1);
+        // _deploy(1);
+        _deployLiquidityRouter(
+            0xbE23B914365cD4F01b991933F204aD8d19C853a9, 
+            0xA7cd9645316C57290D2353D68F9F5749Be493cFd, 
+            0
+        );
         
         // ReferralManager
         // referralManager = address(new ReferralManager(owner));
@@ -57,6 +63,9 @@ contract OutrunAMMScript is BaseScript {
 
         // OutrunAMMRouter
         _deployOutrunAMMRouter(factory0, factory1, nonce);
+
+        // LiquidityRouter for POL minting
+        _deployLiquidityRouter(factory0, factory1, nonce);
     }
 
     function _deployPairImplementation(uint256 nonce) internal returns (address implementation) {
@@ -67,7 +76,6 @@ contract OutrunAMMScript is BaseScript {
     }
 
     function _deployFactory(uint256 swapFeeRate, uint256 nonce) internal returns (address factoryAddr) {
-        // Deploy OutrunAMMFactory By OutrunDeployer
         bytes32 salt = keccak256(abi.encodePacked("OutrunAMMFactory", swapFeeRate, nonce));
         bytes memory creationCode = abi.encodePacked(
             type(OutrunAMMFactory).creationCode,
@@ -80,7 +88,6 @@ contract OutrunAMMScript is BaseScript {
     }
 
     function _deployOutrunAMMRouter(address factory0, address factory01, uint256 nonce) internal {
-        // Deploy OutrunAMMFactory By OutrunDeployer
         bytes32 salt = keccak256(abi.encodePacked("OutrunAMMRouter", nonce));
         bytes memory creationCode = abi.encodePacked(
             type(OutrunAMMRouter).creationCode,
@@ -89,5 +96,16 @@ contract OutrunAMMScript is BaseScript {
         address routerAddr = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
 
         console.log("OutrunAMMRouter deployed on %s", routerAddr);
+    }
+
+    function _deployLiquidityRouter(address factory0, address factory01, uint256 nonce) internal {
+        bytes32 salt = keccak256(abi.encodePacked("LiquidityRouter", nonce));
+        bytes memory creationCode = abi.encodePacked(
+            type(LiquidityRouter).creationCode,
+            abi.encode(factory0, factory01)
+        );
+        address routerAddr = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
+
+        console.log("LiquidityRouter deployed on %s", routerAddr);
     }
 }
