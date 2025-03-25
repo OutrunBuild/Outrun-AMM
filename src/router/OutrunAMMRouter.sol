@@ -208,7 +208,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 deadline,
         bool antiMEV
     ) external override ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = getAmountsIn( amountOut, path, feeRates);
+        amounts = getAmountsIn(amountOut, path, feeRates);
         require(amounts[0] <= amountInMax, ExcessiveInputAmount());
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amounts[0]
