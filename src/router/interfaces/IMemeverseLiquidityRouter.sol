@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.28;
 
-interface ILiquidityRouter {
+interface IMemeverseLiquidityRouter {
     function factories(uint256 feeRate) external view returns (address);
 
     function previewLiquidityOut(
@@ -43,6 +43,17 @@ interface ILiquidityRouter {
         address to,
         uint256 deadline
     ) external returns (uint256 amountA, uint256 amountB, uint256 liquidity);
+
+    function removeLiquidity(
+        address tokenA,
+        address tokenB,
+        uint256 feeRate,
+        uint256 liquidity,
+        uint256 amountAMin,
+        uint256 amountBMin,
+        address to,
+        uint256 deadline
+    ) external returns (uint256 amountA, uint256 amountB);
 
     function quote(
         uint256 amountA, 

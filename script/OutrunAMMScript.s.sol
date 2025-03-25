@@ -5,9 +5,9 @@ import "./BaseScript.s.sol";
 import {IOutrunDeployer} from "./IOutrunDeployer.sol";
 import {OutrunAMMPair} from "../src/core/OutrunAMMPair.sol";
 import {OutrunAMMERC20} from "../src/core/OutrunAMMERC20.sol";
-import {LiquidityRouter} from "../src/router/LiquidityRouter.sol";
 import {OutrunAMMRouter} from "../src/router/OutrunAMMRouter.sol";
 import {ReferralManager} from "../src/referral/ReferralManager.sol";
+import {MemeverseLiquidityRouter} from "../src/router/MemeverseLiquidityRouter.sol";
 import {OutrunAMMFactory, IOutrunAMMFactory} from "../src/core/OutrunAMMFactory.sol";
 
 contract OutrunAMMScript is BaseScript {
@@ -31,7 +31,7 @@ contract OutrunAMMScript is BaseScript {
         _deployLiquidityRouter(
             0xbE23B914365cD4F01b991933F204aD8d19C853a9, 
             0xA7cd9645316C57290D2353D68F9F5749Be493cFd, 
-            0
+            1
         );
         
         // ReferralManager
@@ -99,13 +99,13 @@ contract OutrunAMMScript is BaseScript {
     }
 
     function _deployLiquidityRouter(address factory0, address factory01, uint256 nonce) internal {
-        bytes32 salt = keccak256(abi.encodePacked("LiquidityRouter", nonce));
+        bytes32 salt = keccak256(abi.encodePacked("MemeverseLiquidityRouter", nonce));
         bytes memory creationCode = abi.encodePacked(
-            type(LiquidityRouter).creationCode,
+            type(MemeverseLiquidityRouter).creationCode,
             abi.encode(factory0, factory01)
         );
         address routerAddr = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
 
-        console.log("LiquidityRouter deployed on %s", routerAddr);
+        console.log("MemeverseLiquidityRouter deployed on %s", routerAddr);
     }
 }

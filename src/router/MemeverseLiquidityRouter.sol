@@ -5,14 +5,15 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {TransferHelper} from "../libraries/TransferHelper.sol";
 import {OutrunAMMLibrary} from "../libraries/OutrunAMMLibrary.sol";
-import {ILiquidityRouter} from "./interfaces/ILiquidityRouter.sol";
 import {IOutrunAMMPair} from "../core/interfaces/IOutrunAMMPair.sol";
+import {IOutrunAMMERC20} from "../core/interfaces/IOutrunAMMERC20.sol";
 import {IOutrunAMMFactory} from "../core/interfaces/IOutrunAMMFactory.sol";
+import {IMemeverseLiquidityRouter} from "./interfaces/IMemeverseLiquidityRouter.sol";
 
 /**
- * @dev Use for minting POL tokens
+ * @dev Using for Memeverse liquidity
  */
-contract LiquidityRouter is ILiquidityRouter {
+contract MemeverseLiquidityRouter is IMemeverseLiquidityRouter {
     uint256 public constant RATIO = 10000;
 
     mapping(uint256 feeRate => address) public factories;
@@ -144,6 +145,25 @@ contract LiquidityRouter is ILiquidityRouter {
                 (amountA, amountB) = (amountAOptimal, amountBDesired);
             }
         }
+    }
+
+    function removeLiquidity(
+        address tokenA,
+        address tokenB,
+        uint256 feeRate,
+        uint256 liquidity,
+        uint256 amountAMin,
+        uint256 amountBMin,
+        address to,
+        uint256 deadline
+    ) external override ensure(deadline) returns (uint256 amountA, uint256 amountB) {
+        address pair = OutrunAMMLibrary.pairFor(factories[feeRate], tokenA, tokenB, feeRate);
+        IOutrunAMMERC20(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
+        (uint256 amount0, uint256 amount1) = IOutrunAMMPair(pair).burn(to);
+        (address token0,) = OutrunAMMLibrary.sortTokens(tokenA, tokenB);
+        (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
+        require(amountA >= amountAMin, InsufficientAAmount());
+        require(amountB >= amountBMin, InsufficientBAmount());
     }
 
     function quote(
