@@ -128,7 +128,9 @@ contract MemeverseLiquidityRouter is IMemeverseLiquidityRouter {
         uint256 amountBMin
     ) internal view returns (uint256 amountA, uint256 amountB) {
         address factory = factories[feeRate];
-        require(IOutrunAMMFactory(factory).getPair(tokenA, tokenB) != address(0), NonExistentPair());
+        if (IOutrunAMMFactory(factory).getPair(tokenA, tokenB) == address(0)) {
+            IOutrunAMMFactory(factory).createPair(tokenA, tokenB);
+        }
 
         (uint256 reserveA, uint256 reserveB) = getReserves(factory, tokenA, tokenB, feeRate);
         if (reserveA == 0 && reserveB == 0) {
