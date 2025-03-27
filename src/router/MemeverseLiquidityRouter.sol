@@ -126,7 +126,7 @@ contract MemeverseLiquidityRouter is IMemeverseLiquidityRouter {
         uint256 amountBDesired,
         uint256 amountAMin,
         uint256 amountBMin
-    ) internal view returns (uint256 amountA, uint256 amountB) {
+    ) internal returns (uint256 amountA, uint256 amountB) {
         address factory = factories[feeRate];
         if (IOutrunAMMFactory(factory).getPair(tokenA, tokenB) == address(0)) {
             IOutrunAMMFactory(factory).createPair(tokenA, tokenB);
