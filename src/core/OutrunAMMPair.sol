@@ -4,8 +4,9 @@ pragma solidity ^0.8.28;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {MEVGuard} from "../libraries/MEVGuard.sol";
+import {IMEVGuard} from "./interfaces/IMEVGuard.sol";
 import {UQ112x112} from "../libraries/UQ112x112.sol";
+import {Initializable} from "../libraries/Initializable.sol";
 import {FixedPoint128} from "../libraries/FixedPoint128.sol";
 import {IOutrunAMMPair} from "./interfaces/IOutrunAMMPair.sol";
 import {ReentrancyGuard} from "../libraries/ReentrancyGuard.sol";
@@ -13,7 +14,7 @@ import {IOutrunAMMCallee} from "./interfaces/IOutrunAMMCallee.sol";
 import {IOutrunAMMFactory} from "./interfaces/IOutrunAMMFactory.sol";
 import {IOutrunAMMERC20, OutrunAMMERC20} from "./OutrunAMMERC20.sol";
 
-contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, MEVGuard {
+contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initializable {
     using UQ112x112 for uint224;
 
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes("transfer(address,uint256)")));
@@ -21,6 +22,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, MEVGu
     uint256 public constant MINIMUM_LIQUIDITY = 1000;
 
     address public factory;
+    address public MEVGuard;
     address public token0;
     address public token1;
     uint256 public swapFeeRate;
@@ -68,9 +70,8 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, MEVGu
     function initialize(
         address _token0, 
         address _token1, 
-        uint256 _swapFeeRate,
-        uint256 _antiFrontBlockEdge,
-        uint256 _antiFrontPercentage
+        address _MEVGuard,
+        uint256 _swapFeeRate
     ) external initializer {
         require(_swapFeeRate < RATIO, FeeRateOverflow());
 
@@ -78,8 +79,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, MEVGu
         token1 = _token1;
         swapFeeRate = _swapFeeRate;
         factory = msg.sender;
-
-        __OutrunMEVGuard_init(_antiFrontBlockEdge, _antiFrontPercentage);
+        MEVGuard = _MEVGuard;
     }
 
     /**
@@ -164,7 +164,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, MEVGu
         uint256 amount0In = IERC20(_token0).balanceOf(address(this)) - _reserve0;
         uint256 amount1In = IERC20(_token1).balanceOf(address(this)) - _reserve1;
 
-        if (!_MEVDefend(antiMEV, _reserve0, _reserve1, amount0Out, amount1Out)) {
+        if (!IMEVGuard(MEVGuard).defend(antiMEV, _reserve0, _reserve1, amount0Out, amount1Out)) {
             if (amount0In != 0) _safeTransfer(_token0, to, amount0In);
             if (amount1In != 0) _safeTransfer(_token1, to, amount1In);
             emit SwapInterrupted(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
@@ -359,7 +359,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, MEVGu
     }
 
     function _realSwapFeeRate(uint256 _swapFeeRate) internal view returns (uint256) {
-        return _swapFeeRate + IOutrunAMMFactory(factory).MEVGuardFeePercentage() * _swapFeeRate / 100;
+        return _swapFeeRate + IMEVGuard(MEVGuard).antiMEVFeePercentage() * _swapFeeRate / 100;
     }
 
     function _beforeTokenTransfer(address from, address to, uint256) internal override {

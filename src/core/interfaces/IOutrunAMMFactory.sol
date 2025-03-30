@@ -10,11 +10,7 @@ interface IOutrunAMMFactory {
 
     function allPairs(uint256) external view returns (address pair);
 
-    function antiFrontBlock() external view returns (uint256);
-
-    function antiFrontPercentage() external view returns (uint256);
-
-    function MEVGuardFeePercentage() external view returns (uint256);
+    function MEVGuard() external view returns (address);
 
     function allPairsLength() external view returns (uint256);
 
@@ -25,11 +21,7 @@ interface IOutrunAMMFactory {
 
     function setFeeTo(address feeTo) external;
 
-    function setAntiFrontBlock(uint256 antiFrontBlock) external;
-
-    function setAntiFrontPercentage(uint256 antiFrontPercentage) external;
-
-    function setMEVGuardFeePercentage(uint256 MEVGuardFeePercentage) external;
+    function setMEVGuard(address MEVGuard) external;
 
 
     error ZeroAddress();

@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import "./BaseScript.s.sol";
 import {IOutrunDeployer} from "./IOutrunDeployer.sol";
 import {OutrunAMMPair} from "../src/core/OutrunAMMPair.sol";
+import {IMEVGuard, MEVGuard} from "../src/core/MEVGuard.sol";
 import {OutrunAMMERC20} from "../src/core/OutrunAMMERC20.sol";
 import {OutrunAMMRouter} from "../src/router/OutrunAMMRouter.sol";
 import {ReferralManager} from "../src/referral/ReferralManager.sol";
@@ -13,26 +14,29 @@ import {OutrunAMMFactory, IOutrunAMMFactory} from "../src/core/OutrunAMMFactory.
 contract OutrunAMMScript is BaseScript {
     address internal owner;
     address internal feeTo;
-    address internal referralManager;
+    address internal MEV_GUARD;
     address internal OUTRUN_DEPLOYER;
     address internal pairImplementation;
+    address internal referralManager;
+
+    address internal OUTRUN_AMM_FACTORY_30;
+    address internal OUTRUN_AMM_FACTORY_100;
 
     mapping(uint256 chainId => address) public WETHs;
 
     function run() public broadcaster {
         owner = vm.envAddress("OWNER");
         feeTo = vm.envAddress("FEE_TO");
+        MEV_GUARD = vm.envAddress("MEV_GUARD");
         OUTRUN_DEPLOYER = vm.envAddress("OUTRUN_DEPLOYER");
         pairImplementation = vm.envAddress("PAIR_IMPLEMENTATION");
-        _chainsInit();
-        // _deployPairImplementation(1);
+        OUTRUN_AMM_FACTORY_30 = vm.envAddress("OUTRUN_AMM_FACTORY_30");
+        OUTRUN_AMM_FACTORY_100 = vm.envAddress("OUTRUN_AMM_FACTORY_100");
 
-        // _deploy(1);
-        _deployLiquidityRouter(
-            0xbE23B914365cD4F01b991933F204aD8d19C853a9, 
-            0xA7cd9645316C57290D2353D68F9F5749Be493cFd, 
-            1
-        );
+        _chainsInit();
+
+        // _deployPairImplementation(2);
+        // _deploy(2);
         
         // ReferralManager
         // referralManager = address(new ReferralManager(owner));
@@ -54,12 +58,38 @@ contract OutrunAMMScript is BaseScript {
         // WETHs[59141] = vm.envAddress("LINEA_SEPOLIA_WETH");
     }
 
+    function _deployPairImplementation(uint256 nonce) internal returns (address implementation) {
+        bytes32 salt = keccak256(abi.encodePacked("OutrunAMMPairImplementation", nonce));
+        implementation = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, type(OutrunAMMPair).creationCode);
+
+        console.log("OutrunAMMPairImplementation deployed on %s", implementation);
+    }
+
+    function _deployMEVGuard(address factory0, address factory1, uint256 nonce) internal returns (address guard) {
+        bytes32 salt = keccak256(abi.encodePacked("OutrunMEVGuard", nonce));
+        uint256 antiFrontDefendBlock = 300;
+        uint256 antiMEVFeePercentage = 50;      // 50%
+        uint256 antiMEVAmountOutLimitRate = 50; // 0.5%
+        bytes memory creationCode = abi.encodePacked(
+            type(MEVGuard).creationCode,
+            abi.encode(owner, antiFrontDefendBlock, antiMEVFeePercentage, antiMEVAmountOutLimitRate)
+        );
+        guard = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
+        IMEVGuard(guard).setFactoryStatus(factory0, true);
+        IMEVGuard(guard).setFactoryStatus(factory1, true);
+
+        console.log("OutrunMEVGuard deployed on %s", guard);
+    }
+
     function _deploy(uint256 nonce) internal {
         // 0.3% fee
         address factory0 = _deployFactory(30, nonce);
 
         // 1% fee
         address factory1 = _deployFactory(100, nonce);
+
+        // MEVGuard
+        _deployMEVGuard(factory0, factory1, nonce);
 
         // OutrunAMMRouter
         _deployOutrunAMMRouter(factory0, factory1, nonce);
@@ -68,18 +98,11 @@ contract OutrunAMMScript is BaseScript {
         _deployLiquidityRouter(factory0, factory1, nonce);
     }
 
-    function _deployPairImplementation(uint256 nonce) internal returns (address implementation) {
-        bytes32 salt = keccak256(abi.encodePacked("OutrunAMMPairImplementation", nonce));
-        implementation = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, type(OutrunAMMPair).creationCode);
-
-        console.log("OutrunAMMPairImplementation deployed on %s", implementation);
-    }
-
     function _deployFactory(uint256 swapFeeRate, uint256 nonce) internal returns (address factoryAddr) {
         bytes32 salt = keccak256(abi.encodePacked("OutrunAMMFactory", swapFeeRate, nonce));
         bytes memory creationCode = abi.encodePacked(
             type(OutrunAMMFactory).creationCode,
-            abi.encode(owner, pairImplementation, swapFeeRate)
+            abi.encode(owner, pairImplementation, MEV_GUARD, swapFeeRate)
         );
         factoryAddr = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
         IOutrunAMMFactory(factoryAddr).setFeeTo(feeTo);

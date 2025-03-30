@@ -4,34 +4,29 @@ pragma solidity ^0.8.28;
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
+import {IMEVGuard} from "./interfaces/IMEVGuard.sol";
 import {IOutrunAMMPair, OutrunAMMPair} from "./OutrunAMMPair.sol";
 import {IOutrunAMMFactory} from "./interfaces/IOutrunAMMFactory.sol";
 
 contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
     uint256 public immutable swapFeeRate;
     address public immutable pairImplementation;
-
-    address public feeTo;
-    address[] public allPairs;
-    uint256 public antiFrontBlock;
-    uint256 public antiFrontPercentage;
-    uint256 public MEVGuardFeePercentage;
     
+    address public feeTo;
+    address public MEVGuard;
+    address[] public allPairs;
+
     mapping(address => mapping(address => address)) public getPair;
 
     constructor(
         address owner_, 
         address pairImplementation_,
-        uint256 swapFeeRate_,
-        uint256 antiFrontBlock_,
-        uint256 antiFrontPercentage_,
-        uint256 MEVGuardFeePercentage_
+        address MEVGuard_,
+        uint256 swapFeeRate_
     ) Ownable(owner_) {
         swapFeeRate = swapFeeRate_;
         pairImplementation = pairImplementation_;
-        antiFrontBlock = antiFrontBlock_;
-        antiFrontPercentage = antiFrontPercentage_;
-        MEVGuardFeePercentage = MEVGuardFeePercentage_;
+        MEVGuard = MEVGuard_;
     }
 
     function allPairsLength() external view override returns (uint256) {
@@ -47,7 +42,8 @@ contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
 
         bytes32 salt = keccak256(abi.encodePacked(token0, token1, swapFeeRate));
         pair = Clones.cloneDeterministic(pairImplementation, salt);
-        IOutrunAMMPair(pair).initialize(token0, token1, swapFeeRate, block.number + antiFrontBlock, antiFrontPercentage);
+        IOutrunAMMPair(pair).initialize(token0, token1, MEVGuard, swapFeeRate);
+        IMEVGuard(MEVGuard).setAntiFrontDefendBlockEdge(pair, block.number);
         
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction
@@ -60,15 +56,7 @@ contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
         feeTo = _feeTo;
     }
 
-    function setAntiFrontBlock(uint256 _antiFrontBlock) external override onlyOwner {
-        antiFrontBlock = _antiFrontBlock;
-    }
-
-    function setAntiFrontPercentage(uint256 _antiFrontPercentage) external override onlyOwner {
-        antiFrontPercentage = _antiFrontPercentage;
-    }
-
-    function setMEVGuardFeePercentage(uint256 _MEVGuardFeePercentage) external override onlyOwner {
-        MEVGuardFeePercentage = _MEVGuardFeePercentage;
+    function setMEVGuard(address _MEVGuard) external override onlyOwner {
+        MEVGuard = _MEVGuard;
     }
 }

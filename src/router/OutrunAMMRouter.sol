@@ -271,7 +271,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amounts[0]
         );
-        if(_swap(amounts, path, feeRates, address(this), referrer, antiMEV)) {
+        if (_swap(amounts, path, feeRates, address(this), referrer, antiMEV)) {
             IWETH(WETH).withdraw(amounts[amounts.length - 1]);
             TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
         }

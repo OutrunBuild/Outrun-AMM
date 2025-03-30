@@ -21,8 +21,6 @@ abstract contract OutrunAMMERC20 is IOutrunAMMERC20 {
 
     mapping(address => mapping(address => uint256)) public allowance;
 
-    constructor() {}
-
     function approve(address spender, uint256 amount) public virtual returns (bool) {
         allowance[msg.sender][spender] = amount;
 
