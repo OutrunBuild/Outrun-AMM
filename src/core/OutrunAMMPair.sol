@@ -220,7 +220,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
             kLast = k;
         }
 
-        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
+        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to, antiMEV);
         emit ProtocolFee(referrer, rebateFee0, rebateFee1, protocolFee0, protocolFee1);
 
         return true;
