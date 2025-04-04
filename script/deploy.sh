@@ -1,11 +1,11 @@
 source ../.env
 
-forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url bsc_testnet \
-    --with-gas-price 3000000000 \
-    --optimize --optimizer-runs 100000 \
-    --via-ir \
-    --broadcast --ffi -vvvv \
-    --verify 
+# forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url bsc_testnet \
+#     --with-gas-price 3000000000 \
+#     --optimize --optimizer-runs 100000 \
+#     --via-ir \
+#     --broadcast --ffi -vvvv \
+#     --verify 
 
 forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url base_sepolia \
     --priority-gas-price 2000000 --with-gas-price 150000000 \
@@ -56,13 +56,13 @@ forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url scroll_sepolia \
     --broadcast --ffi -vvvv \
     --verify
 
-forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url monad_testnet \
-    --with-gas-price 52000000000 \
-    --optimize --optimizer-runs 100000 \
-    --via-ir \
-    --broadcast --ffi -vvvv \
-    --verify --verifier sourcify \
-    --verifier-url 'https://sourcify-api-monad.blockvision.org'
+# forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url monad_testnet \
+#     --with-gas-price 52000000000 \
+#     --optimize --optimizer-runs 100000 \
+#     --via-ir \
+#     --broadcast --ffi -vvvv \
+#     --verify --verifier sourcify \
+#     --verifier-url 'https://sourcify-api-monad.blockvision.org'
 
 # forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url linea_sepolia \
 #     --priority-gas-price 49000000 --with-gas-price 50000000 \

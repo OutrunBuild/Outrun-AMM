@@ -14,7 +14,6 @@ import {OutrunAMMFactory, IOutrunAMMFactory} from "../src/core/OutrunAMMFactory.
 contract OutrunAMMScript is BaseScript {
     address internal owner;
     address internal feeTo;
-    address internal MEV_GUARD;
     address internal OUTRUN_DEPLOYER;
     address internal pairImplementation;
     address internal referralManager;
@@ -23,11 +22,11 @@ contract OutrunAMMScript is BaseScript {
     address internal OUTRUN_AMM_FACTORY_100;
 
     mapping(uint256 chainId => address) public WETHs;
+    mapping(uint256 chainId => uint256) public antiFrontDefendBlocks;
 
     function run() public broadcaster {
         owner = vm.envAddress("OWNER");
         feeTo = vm.envAddress("FEE_TO");
-        MEV_GUARD = vm.envAddress("MEV_GUARD");
         OUTRUN_DEPLOYER = vm.envAddress("OUTRUN_DEPLOYER");
         pairImplementation = vm.envAddress("PAIR_IMPLEMENTATION");
         OUTRUN_AMM_FACTORY_30 = vm.envAddress("OUTRUN_AMM_FACTORY_30");
@@ -35,8 +34,8 @@ contract OutrunAMMScript is BaseScript {
 
         _chainsInit();
 
-        // _deployPairImplementation(2);
-        // _deploy(2);
+        // _deployPairImplementation(5);
+        _deploy(6);
         
         // ReferralManager
         // referralManager = address(new ReferralManager(owner));
@@ -52,10 +51,23 @@ contract OutrunAMMScript is BaseScript {
         WETHs[57054] = vm.envAddress("SONIC_BLAZE_WS");
         WETHs[168587773] = vm.envAddress("BLAST_SEPOLIA_WETH");
         WETHs[534351] = vm.envAddress("SCROLL_SEPOLIA_WETH");
-        WETHs[10143] = vm.envAddress("MONAD_TESTNET_WMOD");
+        // WETHs[10143] = vm.envAddress("MONAD_TESTNET_WMOD");
         // WETHs[11155420] = vm.envAddress("OPTIMISTIC_SEPOLIA_WETH");
         // WETHs[300] = vm.envAddress("ZKSYNC_SEPOLIA_WETH");
         // WETHs[59141] = vm.envAddress("LINEA_SEPOLIA_WETH");
+
+        antiFrontDefendBlocks[97] = 400;        // 1.5s
+        antiFrontDefendBlocks[84532] = 300;     // 2s
+        antiFrontDefendBlocks[421614] = 2400;    // 0.25s
+        antiFrontDefendBlocks[43113] = 400;     // 1.5s
+        antiFrontDefendBlocks[80002] = 300;     // 2s
+        antiFrontDefendBlocks[57054] = 1800;     // 0.33s
+        antiFrontDefendBlocks[168587773] = 300; // 2s
+        antiFrontDefendBlocks[534351] = 300;    // 3s
+        // antiFrontDefendBlocks[10143] = 1200;     // 0.5s
+        // antiFrontDefendBlocks[11155420] = 300;  // 2s
+        // antiFrontDefendBlocks[300] = 600;       // 1s
+        // antiFrontDefendBlocks[59141] = 300;     // 2s
     }
 
     function _deployPairImplementation(uint256 nonce) internal returns (address implementation) {
@@ -65,44 +77,45 @@ contract OutrunAMMScript is BaseScript {
         console.log("OutrunAMMPairImplementation deployed on %s", implementation);
     }
 
-    function _deployMEVGuard(address factory0, address factory1, uint256 nonce) internal returns (address guard) {
-        bytes32 salt = keccak256(abi.encodePacked("OutrunMEVGuard", nonce));
-        uint256 antiFrontDefendBlock = 300;
-        uint256 antiMEVFeePercentage = 50;      // 50%
-        uint256 antiMEVAmountOutLimitRate = 50; // 0.5%
-        bytes memory creationCode = abi.encodePacked(
-            type(MEVGuard).creationCode,
-            abi.encode(owner, antiFrontDefendBlock, antiMEVFeePercentage, antiMEVAmountOutLimitRate)
-        );
-        guard = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
+    function _deploy(uint256 nonce) internal {
+        // MEVGuard
+        address guard = _deployMEVGuard(nonce);
+
+        // 0.3% fee
+        address factory0 = _deployFactory(guard, 30, nonce);
+
+        // 1% fee
+        address factory1 = _deployFactory(guard, 100, nonce);
+
         IMEVGuard(guard).setFactoryStatus(factory0, true);
         IMEVGuard(guard).setFactoryStatus(factory1, true);
 
-        console.log("OutrunMEVGuard deployed on %s", guard);
-    }
-
-    function _deploy(uint256 nonce) internal {
-        // 0.3% fee
-        address factory0 = _deployFactory(30, nonce);
-
-        // 1% fee
-        address factory1 = _deployFactory(100, nonce);
-
-        // MEVGuard
-        _deployMEVGuard(factory0, factory1, nonce);
-
         // OutrunAMMRouter
-        _deployOutrunAMMRouter(factory0, factory1, nonce);
+        _deployOutrunAMMRouter(guard, factory0, factory1, nonce);
 
         // LiquidityRouter for POL minting
         _deployLiquidityRouter(factory0, factory1, nonce);
     }
 
-    function _deployFactory(uint256 swapFeeRate, uint256 nonce) internal returns (address factoryAddr) {
+    function _deployMEVGuard(uint256 nonce) internal returns (address guard) {
+        bytes32 salt = keccak256(abi.encodePacked("OutrunMEVGuard", nonce));
+        uint256 antiFrontDefendBlock = antiFrontDefendBlocks[block.chainid];
+        uint256 antiMEVFeePercentage = 5000;      // 50%
+        uint256 antiMEVAmountOutLimitRate = 50;   // 0.5%
+        bytes memory creationCode = abi.encodePacked(
+            type(MEVGuard).creationCode,
+            abi.encode(owner, antiFrontDefendBlock, antiMEVFeePercentage, antiMEVAmountOutLimitRate)
+        );
+        guard = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
+
+        console.log("OutrunMEVGuard deployed on %s", guard);
+    }
+
+    function _deployFactory(address guard, uint256 swapFeeRate, uint256 nonce) internal returns (address factoryAddr) {
         bytes32 salt = keccak256(abi.encodePacked("OutrunAMMFactory", swapFeeRate, nonce));
         bytes memory creationCode = abi.encodePacked(
             type(OutrunAMMFactory).creationCode,
-            abi.encode(owner, pairImplementation, MEV_GUARD, swapFeeRate)
+            abi.encode(owner, pairImplementation, guard, swapFeeRate)
         );
         factoryAddr = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
         IOutrunAMMFactory(factoryAddr).setFeeTo(feeTo);
@@ -110,11 +123,11 @@ contract OutrunAMMScript is BaseScript {
         console.log("%d fee OutrunAMMFactory deployed on %s", swapFeeRate, factoryAddr);
     }
 
-    function _deployOutrunAMMRouter(address factory0, address factory01, uint256 nonce) internal {
+    function _deployOutrunAMMRouter(address guard, address factory0, address factory01, uint256 nonce) internal {
         bytes32 salt = keccak256(abi.encodePacked("OutrunAMMRouter", nonce));
         bytes memory creationCode = abi.encodePacked(
             type(OutrunAMMRouter).creationCode,
-            abi.encode(factory0, factory01, WETHs[block.chainid])
+            abi.encode(factory0, factory01, WETHs[block.chainid], guard)
         );
         address routerAddr = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
 
