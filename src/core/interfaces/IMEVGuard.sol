@@ -24,6 +24,10 @@ interface IMEVGuard {
 
     function antiMEVAmountOutLimitRate() external view returns (uint256);
 
+    function originTo() external view returns (address);
+
+    function setOriginTo(address originTo) external;
+
     function setFactoryStatus(address factory, bool status) external;
 
     function setAntiFrontDefendBlockEdge(address pair, uint256 antiFrontDefendBlockEdge) external;
@@ -34,5 +38,10 @@ interface IMEVGuard {
 
     function setAntiMEVAmountOutLimitRate(uint256 antiMEVAmountOutLimitRate) external;
 
+    
+    error BlockLimit();
+
     error PermissionDenied();
+
+    error TransactionSizeTooSmall();
 }

@@ -50,6 +50,8 @@ interface IOutrunAMMPair {
 
     error ProductKLoss();
 
+    error EmptyOriginTo();
+
     error TransferFailed();
 
     error FeeRateOverflow();
@@ -79,7 +81,7 @@ interface IOutrunAMMPair {
         uint256 amount1In, 
         uint256 amount0Out, 
         uint256 amount1Out, 
-        address indexed to
+        address indexed originTo
     );
 
     event Swap(

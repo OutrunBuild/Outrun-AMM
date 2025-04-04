@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {IWETH} from "../libraries/IWETH.sol";
+import {IMEVGuard} from "../core/interfaces/IMEVGuard.sol";
 import {TransferHelper} from "../libraries/TransferHelper.sol";
 import {OutrunAMMLibrary} from "../libraries/OutrunAMMLibrary.sol";
 import {IOutrunAMMRouter} from "./interfaces/IOutrunAMMRouter.sol";
@@ -14,6 +15,7 @@ import {IOutrunAMMFactory} from "../core/interfaces/IOutrunAMMFactory.sol";
 contract OutrunAMMRouter is IOutrunAMMRouter {
     uint256 public constant RATIO = 10000;
     address public immutable WETH;
+    address public immutable MEV_GUARD;
 
     mapping(uint256 feeRate => address) public factories;
 
@@ -22,10 +24,16 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         _;
     }
 
-    constructor(address _factory0, address _factory1, address _WETH) {
+    constructor(
+        address _factory0, 
+        address _factory1, 
+        address _WETH,
+        address _guard
+    ) {
         factories[30] = _factory0;      // 0.3%
         factories[100] = _factory1;     // 1%
         WETH = _WETH;
+        MEV_GUARD = _guard;
     }
 
     receive() external payable {
@@ -165,16 +173,17 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256[] memory amounts, 
         address[] memory path, 
         uint256[] memory feeRates, 
-        address _to, 
+        address originTo, 
         address referrer,
         bool antiMEV
     ) internal returns (bool) {
+        IMEVGuard(MEV_GUARD).setOriginTo(originTo);
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0,) = OutrunAMMLibrary.sortTokens(input, output);
             uint256 amountOut = amounts[i + 1];
             (uint256 amount0Out, uint256 amount1Out) = input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));
-            address to = i < path.length - 2 ? OutrunAMMLibrary.pairFor(factories[feeRates[i + 1]], output, path[i + 2], feeRates[i + 1]) : _to;
+            address to = i < path.length - 2 ? OutrunAMMLibrary.pairFor(factories[feeRates[i + 1]], output, path[i + 2], feeRates[i + 1]) : originTo;
             if (!IOutrunAMMPair(OutrunAMMLibrary.pairFor(factories[feeRates[i]], input, output, feeRates[i])).swap(amount0Out, amount1Out, to, referrer, new bytes(0), antiMEV)) return false;
         }
         return true;
@@ -300,7 +309,8 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
      * SWAP (supporting fee-on-transfer tokens) *
      */
     // requires the initial amount to have already been sent to the first pair
-    function _swapSupportingFeeOnTransferTokens(address[] memory path, uint256[] memory feeRates, address _to, address referrer, bool antiMEV) internal returns (bool) {
+    function _swapSupportingFeeOnTransferTokens(address[] memory path, uint256[] memory feeRates, address originTo, address referrer, bool antiMEV) internal returns (bool) {
+        IMEVGuard(MEV_GUARD).setOriginTo(originTo);
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0,) = OutrunAMMLibrary.sortTokens(input, output);
@@ -315,7 +325,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
                 amountOutput = getAmountOut(amountInput, reserveInput, reserveOutput, feeRates[i]);
             }
             (uint256 amount0Out, uint256 amount1Out) = input == token0 ? (uint256(0), amountOutput) : (amountOutput, uint256(0));
-            address to = i < path.length - 2 ? OutrunAMMLibrary.pairFor(factories[feeRates[i + 1]], output, path[i + 2], feeRates[i + 1]) : _to;
+            address to = i < path.length - 2 ? OutrunAMMLibrary.pairFor(factories[feeRates[i + 1]], output, path[i + 2], feeRates[i + 1]) : originTo;
             if(!pair.swap(amount0Out, amount1Out, to, referrer, new bytes(0), antiMEV)) return false;
         }
         return true;

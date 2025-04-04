@@ -165,9 +165,11 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
         uint256 amount1In = IERC20(_token1).balanceOf(address(this)) - _reserve1;
 
         if (!IMEVGuard(MEVGuard).defend(antiMEV, _reserve0, _reserve1, amount0Out, amount1Out)) {
-            if (amount0In != 0) _safeTransfer(_token0, to, amount0In);
-            if (amount1In != 0) _safeTransfer(_token1, to, amount1In);
-            emit SwapInterrupted(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
+            address originTo = IMEVGuard(MEVGuard).originTo();
+            require(originTo != address(0), EmptyOriginTo());
+            if (amount0In != 0) _safeTransfer(_token0, originTo, amount0In);
+            if (amount1In != 0) _safeTransfer(_token1, originTo, amount1In);
+            emit SwapInterrupted(msg.sender, amount0In, amount1In, amount0Out, amount1Out, originTo);
             return false;
         }
 
@@ -359,7 +361,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
     }
 
     function _realSwapFeeRate(uint256 _swapFeeRate) internal view returns (uint256) {
-        return _swapFeeRate + IMEVGuard(MEVGuard).antiMEVFeePercentage() * _swapFeeRate / 100;
+        return _swapFeeRate + IMEVGuard(MEVGuard).antiMEVFeePercentage() * _swapFeeRate / RATIO;
     }
 
     function _beforeTokenTransfer(address from, address to, uint256) internal override {

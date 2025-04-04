@@ -18,6 +18,8 @@ contract MEVGuard is IMEVGuard, Ownable {
 
     uint256 public antiMEVAmountOutLimitRate;
 
+    address public transient originTo;
+
     mapping(address factory => bool) public factories;
 
     mapping(address pair => uint256) public antiFrontDefendBlockEdges;
@@ -53,13 +55,12 @@ contract MEVGuard is IMEVGuard, Ownable {
         uniqueRequests[currentBlockNum][tx.origin] = true;
 
         uint256 _currentExecutionRequestNum = ++executionDetails[currentBlockNum].requestNum;
-
-        // Only one transaction can succeed per block before antiFrontBlockEdge, or the previous 
-        // successful transaction did not enable anti-MEV.
-        if (executionDetails[currentBlockNum].isExecuted) return false;
-
+        
         // Anti-Front Running
         if (currentBlockNum < antiFrontDefendBlockEdge) {
+            // Only one transaction can succeed per block before antiFrontBlockEdge
+            if (executionDetails[currentBlockNum].isExecuted) return false;
+
             // Each transaction can purchase a maximum of 1% of the tokens in the liquidity pool
             // before antiFrontBlockEdge.
             if (amount0Out * 200 > reserve0 || amount1Out * 200 > reserve1) return false;
@@ -69,7 +70,7 @@ contract MEVGuard is IMEVGuard, Ownable {
             // for attackers, as they can conduct transactions with multiple addresses and avoid 
             // gas bidding.
             uint256 latestExecutionRequestNum = executionDetails[currentBlockNum - 1].requestNum;
-            uint256 pseudoRandomNum = uint256(keccak256(abi.encodePacked(
+            uint256 randomNum = uint256(keccak256(abi.encodePacked(
                 tx.origin,
                 block.coinbase,
                 block.basefee,
@@ -82,20 +83,30 @@ contract MEVGuard is IMEVGuard, Ownable {
             
             // Success probability is 1 / denominator
             uint256 denominator = latestExecutionRequestNum == 0 ? 1 : latestExecutionRequestNum;
-            if (pseudoRandomNum % denominator == 0) {
+            if (randomNum % denominator == 0) {
                 executionDetails[currentBlockNum].isExecuted == true;
             } else {
                 return false;
             }
         } else if (antiMEV) {
-            if (amount0Out * RATIO < reserve0 * antiMEVAmountOutLimitRate || 
-                amount1Out * RATIO < reserve1 * antiMEVAmountOutLimitRate) return false;
+            require(!executionDetails[currentBlockNum].isExecuted, BlockLimit());
+
+            uint256 _antiMEVAmountOutLimitRate = antiMEVAmountOutLimitRate;
+            require(
+                amount0Out * RATIO >= reserve0 * _antiMEVAmountOutLimitRate || 
+                amount1Out * RATIO >= reserve1 * _antiMEVAmountOutLimitRate,
+                TransactionSizeTooSmall()
+            );
 
             // Prevent subsequent transactions of the same trading pair in the current block.
             executionDetails[currentBlockNum].isExecuted = true;
         }
         
         return true;
+    }
+
+    function setOriginTo(address _originTo) external override {
+        originTo = _originTo;
     }
 
     function setFactoryStatus(address factory, bool status) external override onlyOwner {
