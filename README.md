@@ -12,3 +12,26 @@
 * **Referral Commission Engine**: Outrun AMM is currently the only automated market maker on the market integrated with a referral commission engine. We have redesigned the underlying code and opened the referral commission engine to everyone, thereby increasing the composability of the protocol. The rewards for the referral bonus come from the protocol fees and do not harm the interests of LPs. At the same time, this attracts more transactions, bringing higher income to LPs.
 
 For more details, please refer to the product documentation : [Outrun Official Doc](https://outrun.gitbook.io/doc "Outrun Official Doc")
+
+# Contract
+
+ReferralManager(BSC Testnet): 0x19D4B167198a6f5c5cF5A31668a0F276c3EF173e  
+
+## Omnichain
+
+**Pair Implementation**  
+PairImplementation: 0x5e2539aEae95179290f53E9d11722cDfDb8A8EE6
+
+**MEV Guard**
+MEVGuard: 0x68DFcA7FE57008575faF62B4bDA38EB7A6287190
+
+**0.3% Fee**  
+OutrunAMMFactory: 0x72bEB7F0b63b3e0998490DE22b8413f534f77747
+
+**1% Fee**  
+OutrunAMMFactory: 0x1894f2EC0DB97105286368FE2a234EEF0b68058c  
+
+**Router**  
+OutrunAMMRouter: 0xc1481F9813bac90C23b9bd5d1092F715bD2672C4
+
+MemeverseLiquidityRouter: 0x650d0C4287eA4c4fFAca89E8B36756De9D491b72
