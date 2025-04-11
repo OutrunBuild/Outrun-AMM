@@ -68,20 +68,6 @@ interface IMemeverseLiquidityRouter {
         uint256 feeRate
     ) external view returns (uint256 reserveA, uint256 reserveB);
 
-    function getAmountOut(
-        uint256 amountIn, 
-        uint256 reserveIn, 
-        uint256 reserveOut,
-        uint256 feeRate
-    ) external pure returns (uint256 amountOut);
-
-    function getAmountIn(
-        uint256 amountOut, 
-        uint256 reserveIn, 
-        uint256 reserveOut,
-        uint256 feeRate
-    ) external pure returns (uint256 amountIn);
-
     error Expired();
 
     error NonExistentPair();
@@ -95,8 +81,4 @@ interface IMemeverseLiquidityRouter {
     error ExcessiveInputAmount();
     
     error InsufficientLiquidity();
-
-    error InsufficientInputAmount();
-
-    error InsufficientOutputAmount();
 }

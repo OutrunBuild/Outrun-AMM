@@ -188,31 +188,4 @@ contract MemeverseLiquidityRouter is IMemeverseLiquidityRouter {
         (uint256 reserve0, uint256 reserve1,) = IOutrunAMMPair(OutrunAMMLibrary.pairFor(factory, tokenA, tokenB, feeRate)).getReserves();
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
     }
-
-    function getAmountOut(
-        uint256 amountIn, 
-        uint256 reserveIn, 
-        uint256 reserveOut, 
-        uint256 feeRate
-    ) public pure override returns (uint256 amountOut) {
-        require(amountIn > 0, InsufficientInputAmount());
-        require(reserveIn > 0 && reserveOut > 0, InsufficientLiquidity());
-        uint256 amountInWithFee = amountIn * (RATIO - feeRate);
-        uint256 numerator = amountInWithFee * reserveOut;
-        uint256 denominator = reserveIn * RATIO + amountInWithFee;
-        amountOut = numerator / denominator;
-    }
-
-    function getAmountIn(
-        uint256 amountOut, 
-        uint256 reserveIn, 
-        uint256 reserveOut, 
-        uint256 feeRate
-    ) public pure override returns (uint256 amountIn) {
-        require(amountOut > 0, InsufficientOutputAmount());
-        require(reserveIn > 0 && reserveOut > 0, InsufficientLiquidity());
-        uint256 numerator = reserveIn * amountOut * RATIO;
-        uint256 denominator = (reserveOut - amountOut) * (RATIO - feeRate);
-        amountIn = (numerator / denominator) + 1;
-    }
 }
