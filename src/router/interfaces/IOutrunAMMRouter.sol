@@ -181,26 +181,30 @@ interface IOutrunAMMRouter {
         uint256 amountIn, 
         uint256 reserveIn, 
         uint256 reserveOut,
-        uint256 feeRate
-    ) external pure returns (uint256 amountOut);
+        uint256 feeRate,
+        bool antiMEV
+    ) external view returns (uint256 amountOut);
 
     function getAmountIn(
         uint256 amountOut, 
         uint256 reserveIn, 
         uint256 reserveOut,
-        uint256 feeRate
-    ) external pure returns (uint256 amountIn);
+        uint256 feeRate,
+        bool antiMEV
+    ) external view returns (uint256 amountIn);
 
     function getAmountsOut(
         uint256 amountIn, 
         address[] memory path,
-        uint256[] memory feeRates
+        uint256[] memory feeRates,
+        bool antiMEV
     ) external view returns (uint256[] memory amounts);
 
     function getAmountsIn(
         uint256 amountOut, 
         address[] memory path,
-        uint256[] memory feeRates
+        uint256[] memory feeRates,
+        bool antiMEV
     ) external view returns (uint256[] memory amounts);
 
     error Expired();
