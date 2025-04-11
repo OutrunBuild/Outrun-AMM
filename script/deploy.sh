@@ -1,39 +1,39 @@
 source ../.env
 
 # forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url bsc_testnet \
-#     --with-gas-price 3000000000 \
+#     --with-gas-price 1000000000 \
 #     --optimize --optimizer-runs 100000 \
 #     --via-ir \
 #     --broadcast --ffi -vvvv \
 #     --verify 
 
-forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url base_sepolia \
-    --priority-gas-price 2000000 --with-gas-price 150000000 \
-    --optimize --optimizer-runs 100000 \
-    --via-ir \
-    --broadcast --ffi -vvvv \
-    --verify 
+# forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url base_sepolia \
+#     --priority-gas-price 2000000 --with-gas-price 150000000 \
+#     --optimize --optimizer-runs 100000 \
+#     --via-ir \
+#     --broadcast --ffi -vvvv \
+#     --verify 
 
-forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url arbitrum_sepolia \
-    --with-gas-price 100000000 \
-    --optimize --optimizer-runs 100000 \
-    --via-ir \
-    --broadcast --ffi -vvvv \
-    --verify
+# forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url arbitrum_sepolia \
+#     --with-gas-price 100000000 \
+#     --optimize --optimizer-runs 100000 \
+#     --via-ir \
+#     --broadcast --ffi -vvvv \
+#     --verify
 
-forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url avalanche_fuji \
-    --priority-gas-price 1000000001 --with-gas-price 1000000001 \
-    --optimize --optimizer-runs 100000 \
-    --via-ir \
-    --broadcast --ffi -vvvv \
-    --verify
+# forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url avalanche_fuji \
+#     --priority-gas-price 1000000001 --with-gas-price 1000000001 \
+#     --optimize --optimizer-runs 100000 \
+#     --via-ir \
+#     --broadcast --ffi -vvvv \
+#     --verify
 
-forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url polygon_amoy \
-    --priority-gas-price 40000000000 --with-gas-price 50000000000 \
-    --optimize --optimizer-runs 100000 \
-    --via-ir \
-    --broadcast --ffi -vvvv \
-    --verify
+# forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url polygon_amoy \
+#     --priority-gas-price 40000000000 --with-gas-price 50000000000 \
+#     --optimize --optimizer-runs 100000 \
+#     --via-ir \
+#     --broadcast --ffi -vvvv \
+#     --verify
 
 forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url sonic_blaze \
     --with-gas-price 1100000000 \
