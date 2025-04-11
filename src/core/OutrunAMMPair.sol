@@ -246,7 +246,6 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
         uint256 balance1 = IERC20(_token1).balanceOf(address(this));
         uint256 rootKLast = Math.sqrt(kLast);
 
-        Math.mulDiv(feeX128, balance0, FixedPoint128.Q128 * rootKLast);
         amount0 = Math.mulDiv(feeX128, balance0, FixedPoint128.Q128 * rootKLast);
         amount1 = Math.mulDiv(feeX128, balance1, FixedPoint128.Q128 * rootKLast);        
         require(amount0 > 0 && amount1 > 0, InsufficientMakerFeeClaimed());

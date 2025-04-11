@@ -40,11 +40,7 @@ interface IOutrunAMMPair {
     function claimMakerFee() external returns (uint256 amount0, uint256 amount1);
 
 
-    error Locked();
-
     error Overflow();
-
-    error Forbidden();
 
     error InvalidTo();
 
@@ -61,8 +57,6 @@ interface IOutrunAMMPair {
     error InsufficientInputAmount();
 
     error InsufficientOutputAmount();
-
-    error InsufficientUnclaimedFee();
 
     error InsufficientLiquidityMinted();
 
