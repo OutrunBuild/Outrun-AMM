@@ -26,7 +26,7 @@ contract MEVGuard is IMEVGuard, Ownable {
 
     mapping(uint256 blockNum => ExecutionDetail) private executionDetails;
 
-    mapping(uint256 blockNum => mapping(address origin => bool)) private uniqueRequests;
+    mapping(uint256 blockNum => mapping(address pair => mapping(address origin => bool))) private uniqueRequests;
 
     constructor(
         address _owner, 
@@ -51,13 +51,13 @@ contract MEVGuard is IMEVGuard, Ownable {
 
         uint256 currentBlockNum = block.number;
 
-        if (uniqueRequests[currentBlockNum][tx.origin]) return false;
-        uniqueRequests[currentBlockNum][tx.origin] = true;
-
         uint256 _currentExecutionRequestNum = ++executionDetails[currentBlockNum].requestNum;
         
         // Anti-Front Running
         if (currentBlockNum < antiFrontDefendBlockEdge) {
+            if (uniqueRequests[currentBlockNum][msg.sender][tx.origin]) return false;
+            uniqueRequests[currentBlockNum][msg.sender][tx.origin] = true;
+            
             // Only one transaction can succeed per block before antiFrontBlockEdge
             if (executionDetails[currentBlockNum].isExecuted) return false;
 
