@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.28;
 
-interface IOutrunAMMPair {
+interface IOutrunAMMPairOnBlast {
     struct MakerNativeYield {
         uint128 index;
         uint128 accrued;

@@ -10,7 +10,7 @@ import {IOutrunAMMFactory} from "../core/interfaces/IOutrunAMMFactory.sol";
 /**
  * @dev MEV Guard - Anti-Front Running and MEV
  */
-contract MEVGuard is IMEVGuard, Ownable {
+contract MEVGuardOnARB is IMEVGuard, Ownable {
     uint256 public constant RATIO = 10000;
     address public constant arbSys = 0x0000000000000000000000000000000000000064;
 

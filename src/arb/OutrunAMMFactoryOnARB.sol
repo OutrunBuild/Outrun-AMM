@@ -6,10 +6,10 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IArbSys} from "./IArbSys.sol";
 import {IMEVGuard} from "../core/interfaces/IMEVGuard.sol";
-import {IOutrunAMMPair, OutrunAMMPair} from "../core/OutrunAMMPair.sol";
+import {IOutrunAMMPair} from "../core/interfaces/IOutrunAMMPair.sol";
 import {IOutrunAMMFactory} from "../core/interfaces/IOutrunAMMFactory.sol";
 
-contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {
+contract OutrunAMMFactoryOnARB is IOutrunAMMFactory, Ownable {
     address public constant arbSys = 0x0000000000000000000000000000000000000064;
 
     uint256 public immutable swapFeeRate;

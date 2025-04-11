@@ -5,7 +5,7 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IMEVGuard} from "./interfaces/IMEVGuard.sol";
-import {IOutrunAMMPair, OutrunAMMPair} from "./OutrunAMMPair.sol";
+import {IOutrunAMMPair} from "./interfaces/IOutrunAMMPair.sol";
 import {IOutrunAMMFactory} from "./interfaces/IOutrunAMMFactory.sol";
 
 contract OutrunAMMFactory is IOutrunAMMFactory, Ownable {

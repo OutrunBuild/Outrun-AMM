@@ -10,7 +10,6 @@ import {UQ112x112} from "../libraries/UQ112x112.sol";
 import {IMEVGuard} from "../core/interfaces/IMEVGuard.sol";
 import {Initializable} from "../libraries/Initializable.sol";
 import {FixedPoint128} from "../libraries/FixedPoint128.sol";
-import {IOutrunAMMPair} from "./interfaces/IOutrunAMMPair.sol";
 import {ReentrancyGuard} from "../libraries/ReentrancyGuard.sol";
 import {BlastGovernorableInit} from "./BlastGovernorableInit.sol";
 import {IStandardizedYield} from "./interfaces/IStandardizedYield.sol";
@@ -18,8 +17,9 @@ import {IOutrunAMMCallee} from "../core/interfaces/IOutrunAMMCallee.sol";
 import {IOutrunAMMFactory} from "../core/interfaces/IOutrunAMMFactory.sol";
 import {IOutrunAMMERC20, OutrunAMMERC20} from "../core/OutrunAMMERC20.sol";
 import {IOutrunAMMYieldVault} from "./interfaces/IOutrunAMMYieldVault.sol";
+import {IOutrunAMMPairOnBlast} from "./interfaces/IOutrunAMMPairOnBlast.sol";
 
-contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, BlastGovernorableInit {
+contract OutrunAMMPairOnBlast is IOutrunAMMPairOnBlast, OutrunAMMERC20, ReentrancyGuard, BlastGovernorableInit {
     using OMath for uint256;
     using UQ112x112 for uint224;
 

@@ -4,12 +4,12 @@ pragma solidity ^0.8.28;
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {IMEVGuard} from "../core/interfaces/IMEVGuard.sol";
 import {BlastGovernorable} from "./BlastGovernorable.sol";
-import {OutrunAMMPair, IOutrunAMMPair} from "./OutrunAMMPair.sol";
+import {IMEVGuard} from "../core/interfaces/IMEVGuard.sol";
 import {IOutrunAMMFactory} from "../core/interfaces/IOutrunAMMFactory.sol";
+import {IOutrunAMMPairOnBlast} from "./interfaces/IOutrunAMMPairOnBlast.sol";
 
-contract OutrunAMMFactory is IOutrunAMMFactory, Ownable, BlastGovernorable {
+contract OutrunAMMFactoryOnBlast is IOutrunAMMFactory, Ownable, BlastGovernorable {
     address public constant WETH = 0x4200000000000000000000000000000000000023;  // OutrunTODO update on mainnet
     address public constant USDB = 0x4200000000000000000000000000000000000022;  // OutrunTODO update on mainnet
 
@@ -50,7 +50,7 @@ contract OutrunAMMFactory is IOutrunAMMFactory, Ownable, BlastGovernorable {
 
         bytes32 salt = keccak256(abi.encodePacked(token0, token1, swapFeeRate));
         pair = Clones.cloneDeterministic(pairImplementation, salt);
-        IOutrunAMMPair(pair).initialize(
+        IOutrunAMMPairOnBlast(pair).initialize(
             token0, 
             token1, 
             blastGovernor, 
