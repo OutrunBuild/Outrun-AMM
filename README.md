@@ -16,7 +16,7 @@ For more details, please refer to the product documentation : [Outrun Official D
 
 # Contract
 
-ReferralManager(BSC Testnet): 0x19D4B167198a6f5c5cF5A31668a0F276c3EF173e  
+ReferralManager(BSC Testnet): 0x191bE497e3B58d1361AAC4eB7ADce12829bbd147  
 
 ## Omnichain
 
