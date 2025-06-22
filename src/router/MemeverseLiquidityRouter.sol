@@ -91,9 +91,10 @@ contract MemeverseLiquidityRouter is IMemeverseLiquidityRouter {
         uint256 amountAMin,
         uint256 amountBMin,
         address to,
+        uint256 triggerTime,
         uint256 deadline
     ) external override ensure(deadline) returns (uint256 amountA, uint256 amountB, uint256 liquidity) {
-        (amountA, amountB) = _addLiquidity(tokenA, tokenB, feeRate, amountADesired, amountBDesired, amountAMin, amountBMin);
+        (amountA, amountB) = _addLiquidity(tokenA, tokenB, feeRate, amountADesired, amountBDesired, amountAMin, amountBMin, triggerTime);
         address pair = OutrunAMMLibrary.pairFor(factories[feeRate], tokenA, tokenB, feeRate);
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
@@ -125,11 +126,12 @@ contract MemeverseLiquidityRouter is IMemeverseLiquidityRouter {
         uint256 amountADesired,
         uint256 amountBDesired,
         uint256 amountAMin,
-        uint256 amountBMin
+        uint256 amountBMin,
+        uint256 triggerTime
     ) internal returns (uint256 amountA, uint256 amountB) {
         address factory = factories[feeRate];
         if (IOutrunAMMFactory(factory).getPair(tokenA, tokenB) == address(0)) {
-            IOutrunAMMFactory(factory).createPair(tokenA, tokenB);
+            IOutrunAMMFactory(factory).createPair(tokenA, tokenB, triggerTime);
         }
 
         (uint256 reserveA, uint256 reserveB) = getReserves(factory, tokenA, tokenB, feeRate);

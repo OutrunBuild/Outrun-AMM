@@ -36,7 +36,10 @@ contract OutrunAMMFactoryOnARB is IOutrunAMMFactory, Ownable {
         return allPairs.length;
     }
 
-    function createPair(address tokenA, address tokenB) external override returns (address pair) {
+    /**
+     * @param triggerTime - For POL(FFLaunch/Memeverse) liquidity protection period, If it is 0, it means there is no POL liquidity protection period
+     */
+    function createPair(address tokenA, address tokenB, uint256 triggerTime) external override returns (address pair) {
         require(tokenA != tokenB, IdenticalAddresses());
 
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
@@ -45,7 +48,7 @@ contract OutrunAMMFactoryOnARB is IOutrunAMMFactory, Ownable {
 
         bytes32 salt = keccak256(abi.encodePacked(token0, token1, swapFeeRate));
         pair = Clones.cloneDeterministic(pairImplementation, salt);
-        IOutrunAMMPair(pair).initialize(token0, token1, MEVGuard, swapFeeRate);
+        IOutrunAMMPair(pair).initialize(token0, token1, MEVGuard, swapFeeRate, triggerTime);
         IMEVGuard(MEVGuard).setAntiFrontDefendBlockEdge(pair, IArbSys(arbSys).arbBlockNumber());
         
         getPair[token0][token1] = pair;

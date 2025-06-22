@@ -30,6 +30,7 @@ interface IMemeverseLiquidityRouter {
         uint256 amountAMin,
         uint256 amountBMin,
         address to,
+        uint256 triggerTime,
         uint256 deadline
     ) external returns (uint256 amountA, uint256 amountB, uint256 liquidity);
 

@@ -43,6 +43,7 @@ interface IOutrunAMMPairOnBlast {
         address MEVGuard,
         address yieldVault, 
         uint256 swapFeeRate, 
+        uint256 triggerTime, 
         bool enableBETHNativeYield, 
         bool enableUSDBNativeYield
     ) external;
@@ -85,6 +86,8 @@ interface IOutrunAMMPairOnBlast {
     error InsufficientInputAmount();
 
     error InsufficientOutputAmount();
+
+    error LiquidityProtectionPeriod();
 
     error InsufficientLiquidityMinted();
 

@@ -41,6 +41,7 @@ contract OutrunAMMPairOnBlast is IOutrunAMMPairOnBlast, OutrunAMMERC20, Reentran
     uint112 private reserve0; // uses single storage slot, accessible via getReserves
     uint112 private reserve1; // uses single storage slot, accessible via getReserves
     uint32 private blockTimestampLast; // uses single storage slot, accessible via getReserves
+    uint256 public triggerTime; // For POL(FFLaunch/Memeverse) liquidity protection period, If it is 0, it means there is no POL liquidity protection period
 
     uint256 public price0CumulativeLast;
     uint256 public price1CumulativeLast;
@@ -118,6 +119,7 @@ contract OutrunAMMPairOnBlast is IOutrunAMMPairOnBlast, OutrunAMMERC20, Reentran
         address _MEVGuard,
         address _yieldVault, 
         uint256 _swapFeeRate, 
+        uint256 _triggerTime, 
         bool _enableBETHNativeYield, 
         bool _enableUSDBNativeYield
     ) external initializer {
@@ -141,6 +143,7 @@ contract OutrunAMMPairOnBlast is IOutrunAMMPairOnBlast, OutrunAMMERC20, Reentran
         factory = msg.sender;
         MEVGuard = _MEVGuard;
         yieldVault = _yieldVault;
+        if (_triggerTime != 0) triggerTime = _triggerTime;
     }
 
     /**
@@ -236,6 +239,13 @@ contract OutrunAMMPairOnBlast is IOutrunAMMPairOnBlast, OutrunAMMERC20, Reentran
      * @notice - this low-level function should be called from a contract which performs important safety checks
      */
     function swap(uint256 amount0Out, uint256 amount1Out, address to, address referrer, bytes calldata data, bool antiMEV) external nonReentrant returns (bool) {
+        uint256 _triggerTime = triggerTime;
+        require(
+            block.timestamp < _triggerTime || 
+            block.timestamp > _triggerTime + 2 days,
+            LiquidityProtectionPeriod()
+        );
+        
         require(amount0Out > 0 || amount1Out > 0, InsufficientOutputAmount());
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
         require(amount0Out < _reserve0 && amount1Out < _reserve1, InsufficientLiquidity());

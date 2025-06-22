@@ -17,7 +17,7 @@ interface IOutrunAMMFactory {
     function getPair(address tokenA, address tokenB) external view returns (address pair);
 
 
-    function createPair(address tokenA, address tokenB) external returns (address pair);
+    function createPair(address tokenA, address tokenB, uint256 triggerTime) external returns (address pair);
 
     function setFeeTo(address feeTo) external;
 

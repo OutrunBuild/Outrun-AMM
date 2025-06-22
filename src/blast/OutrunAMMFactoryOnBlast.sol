@@ -41,7 +41,10 @@ contract OutrunAMMFactoryOnBlast is IOutrunAMMFactory, Ownable, BlastGovernorabl
         return allPairs.length;
     }
 
-    function createPair(address tokenA, address tokenB) external returns (address pair) {
+    /**
+     * @param triggerTime - For POL(FFLaunch/Memeverse) liquidity protection period, If it is 0, it means there is no POL liquidity protection period
+     */
+    function createPair(address tokenA, address tokenB, uint256 triggerTime) external returns (address pair) {
         require(tokenA != tokenB, IdenticalAddresses());
 
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
@@ -57,6 +60,7 @@ contract OutrunAMMFactoryOnBlast is IOutrunAMMFactory, Ownable, BlastGovernorabl
             MEVGuard, 
             YIELD_VAULT, 
             swapFeeRate, 
+            triggerTime, 
             tokenA == WETH || tokenB == WETH, 
             tokenA == USDB || tokenB == USDB
         );

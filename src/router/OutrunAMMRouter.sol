@@ -56,7 +56,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         address factory = factories[feeRate];
         // create the pair if it doesn't exist yet
         if (IOutrunAMMFactory(factory).getPair(tokenA, tokenB) == address(0)) {
-            IOutrunAMMFactory(factory).createPair(tokenA, tokenB);
+            IOutrunAMMFactory(factory).createPair(tokenA, tokenB, 0);
         }
         (uint256 reserveA, uint256 reserveB) = getReserves(factory, tokenA, tokenB, feeRate);
         if (reserveA == 0 && reserveB == 0) {
