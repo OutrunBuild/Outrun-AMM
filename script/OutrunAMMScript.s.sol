@@ -50,11 +50,11 @@ contract OutrunAMMScript is BaseScript {
         BLAST_GOVERNOR = vm.envAddress("BLAST_GOVERNOR");
 
         _chainsInit();
-        // _getDeployedFactory(30, 7);
-        // _getDeployedFactory(100, 7);
+        // _getDeployedFactory(30, 8);
+        // _getDeployedFactory(100, 8);
 
-        // _deployPairImplementation(6);
-        _deploy(7);
+        // _deployPairImplementation(8);
+        _deploy(8);
         
         // ReferralManager
         // referralManager = address(new ReferralManager(owner));
