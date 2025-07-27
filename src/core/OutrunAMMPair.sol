@@ -155,10 +155,9 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
      * @param amount1Out - Amount of token0 output
      * @param to - Address to output
      * @param referrer - Address of rebate referrer
-     * @param antiMEV - Enable anti-MEV mode
      * @notice - this low-level function should be called from a contract which performs important safety checks
      */
-    function swap(uint256 amount0Out, uint256 amount1Out, address to, address referrer, bytes calldata data, bool antiMEV) external nonReentrant returns (bool) {
+    function swap(uint256 amount0Out, uint256 amount1Out, address to, address referrer, bytes calldata data) external nonReentrant returns (bool) {
         uint256 _triggerTime = triggerTime;
         require(
             block.timestamp < _triggerTime || 
@@ -175,7 +174,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
         uint256 amount0In = IERC20(_token0).balanceOf(address(this)) - _reserve0;
         uint256 amount1In = IERC20(_token1).balanceOf(address(this)) - _reserve1;
 
-        if (!IMEVGuard(MEVGuard).defend(antiMEV, _reserve0, _reserve1, amount0Out, amount1Out)) {
+        if (!IMEVGuard(MEVGuard).defend(_reserve0, _reserve1, amount0Out, amount1Out)) {
             address originTo = IMEVGuard(MEVGuard).originTo();
             require(originTo != address(0), EmptyOriginTo());
             if (amount0In != 0) _safeTransfer(_token0, originTo, amount0In);
@@ -208,9 +207,8 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
         uint256 protocolFee1;
         uint256 _swapFeeRate = swapFeeRate;
         {
-            uint256 realSwapFeeRate = antiMEV ? _realSwapFeeRate(_swapFeeRate) : _swapFeeRate;
-            uint256 balance0Adjusted = balance0 * RATIO - amount0In * realSwapFeeRate;
-            uint256 balance1Adjusted = balance1 * RATIO - amount1In * realSwapFeeRate;
+            uint256 balance0Adjusted = balance0 * RATIO - amount0In * _swapFeeRate;
+            uint256 balance1Adjusted = balance1 * RATIO - amount1In * _swapFeeRate;
             
             require(
                 balance0Adjusted * balance1Adjusted >= uint256(_reserve0) * uint256(_reserve1) * RATIO ** 2,
@@ -218,8 +216,8 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
             );
 
             address feeTo = _feeTo();
-            (balance0, rebateFee0, protocolFee0) = _transferRebateAndProtocolFee(amount0In, balance0, realSwapFeeRate, _token0, referrer, feeTo);
-            (balance1, rebateFee1, protocolFee1) = _transferRebateAndProtocolFee(amount1In, balance1, realSwapFeeRate, _token1, referrer, feeTo);
+            (balance0, rebateFee0, protocolFee0) = _transferRebateAndProtocolFee(amount0In, balance0, _swapFeeRate, _token0, referrer, feeTo);
+            (balance1, rebateFee1, protocolFee1) = _transferRebateAndProtocolFee(amount1In, balance1, _swapFeeRate, _token1, referrer, feeTo);
         }
 
         _update(balance0, balance1, _reserve0, _reserve1);
@@ -233,7 +231,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
             kLast = k;
         }
 
-        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to, antiMEV);
+        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
         emit ProtocolFee(referrer, rebateFee0, rebateFee1, protocolFee0, protocolFee1);
 
         return true;
@@ -327,7 +325,7 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
     function _transferRebateAndProtocolFee(
         uint256 amountIn,
         uint256 balance,
-        uint256 realSwapFeeRate,
+        uint256 feeRate,
         address token,
         address referrer,
         address feeTo
@@ -339,13 +337,13 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
         if (referrer == address(0)) {
             // swapFee * 25% as protocolFee
             rebateFee = 0;
-            protocolFee = amountIn * realSwapFeeRate / (RATIO * 4);
+            protocolFee = amountIn * feeRate / (RATIO * 4);
             balanceAfter = balance - protocolFee;
             _safeTransfer(token, feeTo, protocolFee);
         } else {
             // swapFee * 25% * 20% as rebateFee, swapFee * 25% * 80% as protocolFee
-            rebateFee = amountIn * realSwapFeeRate / (RATIO * 20);
-            protocolFee = amountIn * realSwapFeeRate / (RATIO * 5);
+            rebateFee = amountIn * feeRate / (RATIO * 20);
+            protocolFee = amountIn * feeRate / (RATIO * 5);
             balanceAfter = balance - rebateFee - protocolFee;
             _safeTransfer(token, referrer, rebateFee);
             _safeTransfer(token, feeTo, protocolFee);
@@ -368,10 +366,6 @@ contract OutrunAMMPair is IOutrunAMMPair, OutrunAMMERC20, ReentrancyGuard, Initi
 
     function _feeTo() internal view returns (address) {
         return IOutrunAMMFactory(factory).feeTo();
-    }
-
-    function _realSwapFeeRate(uint256 _swapFeeRate) internal view returns (uint256) {
-        return _swapFeeRate + IMEVGuard(MEVGuard).antiMEVFeePercentage() * _swapFeeRate / RATIO;
     }
 
     function _beforeTokenTransfer(address from, address to, uint256) internal override {

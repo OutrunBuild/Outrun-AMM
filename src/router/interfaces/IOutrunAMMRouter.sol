@@ -75,8 +75,7 @@ interface IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external returns (uint256[] memory amounts);
 
     function swapTokensForExactTokens(
@@ -86,8 +85,7 @@ interface IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external returns (uint256[] memory amounts);
 
     function swapExactETHForTokens(
@@ -96,8 +94,7 @@ interface IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external payable returns (uint256[] memory amounts);
 
     function swapTokensForExactETH(
@@ -107,8 +104,7 @@ interface IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external returns (uint256[] memory amounts);
 
     function swapExactTokensForETH(
@@ -118,8 +114,7 @@ interface IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external returns (uint256[] memory amounts);
 
     function swapETHForExactTokens(
@@ -128,8 +123,7 @@ interface IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external payable returns (uint256[] memory amounts);
 
     function swapExactTokensForTokensSupportingFeeOnTransferTokens(
@@ -139,8 +133,7 @@ interface IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external;
 
     function swapExactETHForTokensSupportingFeeOnTransferTokens(
@@ -149,8 +142,7 @@ interface IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external payable;
 
     function swapExactTokensForETHSupportingFeeOnTransferTokens(
@@ -160,8 +152,7 @@ interface IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external;
 
     function quote(
@@ -181,30 +172,26 @@ interface IOutrunAMMRouter {
         uint256 amountIn, 
         uint256 reserveIn, 
         uint256 reserveOut,
-        uint256 feeRate,
-        bool antiMEV
+        uint256 feeRate
     ) external view returns (uint256 amountOut);
 
     function getAmountIn(
         uint256 amountOut, 
         uint256 reserveIn, 
         uint256 reserveOut,
-        uint256 feeRate,
-        bool antiMEV
+        uint256 feeRate
     ) external view returns (uint256 amountIn);
 
     function getAmountsOut(
         uint256 amountIn, 
         address[] memory path,
-        uint256[] memory feeRates,
-        bool antiMEV
+        uint256[] memory feeRates
     ) external view returns (uint256[] memory amounts);
 
     function getAmountsIn(
         uint256 amountOut, 
         address[] memory path,
-        uint256[] memory feeRates,
-        bool antiMEV
+        uint256[] memory feeRates
     ) external view returns (uint256[] memory amounts);
 
     error Expired();

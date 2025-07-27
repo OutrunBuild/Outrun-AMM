@@ -11,7 +11,6 @@ interface IMEVGuard {
     }
 
     function defend(
-        bool antiMEV,
         uint256 reserve0, 
         uint256 reserve1,
         uint256 amount0Out,
@@ -19,10 +18,6 @@ interface IMEVGuard {
     ) external returns (bool);
 
     function antiFrontDefendBlock() external view returns (uint256);
-
-    function antiMEVFeePercentage() external view returns (uint256);
-
-    function antiMEVAmountOutLimitRate() external view returns (uint256);
 
     function originTo() external view returns (address);
 
@@ -33,10 +28,6 @@ interface IMEVGuard {
     function setAntiFrontDefendBlockEdge(address pair, uint256 antiFrontDefendBlockEdge) external;
 
     function setAntiFrontDefendBlock(uint256 antiFrontDefendBlock) external;
-
-    function setAntiMEVFeePercentage(uint256 antiMEVFeePercentage) external;
-
-    function setAntiMEVAmountOutLimitRate(uint256 antiMEVAmountOutLimitRate) external;
 
     
     error BlockLimit();

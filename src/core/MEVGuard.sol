@@ -14,10 +14,6 @@ contract MEVGuard is IMEVGuard, Ownable {
 
     uint256 public antiFrontDefendBlock;
 
-    uint256 public antiMEVFeePercentage;
-
-    uint256 public antiMEVAmountOutLimitRate;
-
     address public transient originTo;
 
     mapping(address factory => bool) public factories;
@@ -28,19 +24,11 @@ contract MEVGuard is IMEVGuard, Ownable {
 
     mapping(uint256 blockNum => mapping(address pair => mapping(address origin => bool))) private uniqueRequests;
 
-    constructor(
-        address _owner, 
-        uint256 _antiFrontDefendBlock,
-        uint256 _antiMEVFeePercentage,
-        uint256 _antiMEVAmountOutLimitRate
-    ) Ownable(_owner) {
+    constructor(address _owner, uint256 _antiFrontDefendBlock) Ownable(_owner) {
         antiFrontDefendBlock = _antiFrontDefendBlock;
-        antiMEVFeePercentage = _antiMEVFeePercentage;
-        antiMEVAmountOutLimitRate = _antiMEVAmountOutLimitRate;
     }
 
     function defend(
-        bool antiMEV,
         uint256 reserve0, 
         uint256 reserve1,
         uint256 amount0Out,
@@ -88,20 +76,8 @@ contract MEVGuard is IMEVGuard, Ownable {
             } else {
                 return false;
             }
-        } else if (antiMEV) {
-            require(!executionDetails[currentBlockNum].isExecuted, BlockLimit());
-
-            uint256 _antiMEVAmountOutLimitRate = antiMEVAmountOutLimitRate;
-            require(
-                amount0Out * RATIO >= reserve0 * _antiMEVAmountOutLimitRate || 
-                amount1Out * RATIO >= reserve1 * _antiMEVAmountOutLimitRate,
-                TransactionSizeTooSmall()
-            );
-
-            // Prevent subsequent transactions of the same trading pair in the current block.
-            executionDetails[currentBlockNum].isExecuted = true;
         }
-        
+
         return true;
     }
 
@@ -120,13 +96,5 @@ contract MEVGuard is IMEVGuard, Ownable {
 
     function setAntiFrontDefendBlock(uint256 _antiFrontDefendBlock) external override onlyOwner {
         antiFrontDefendBlock = _antiFrontDefendBlock;
-    }
-
-    function setAntiMEVFeePercentage(uint256 _antiMEVFeePercentage) external override onlyOwner {
-        antiMEVFeePercentage = _antiMEVFeePercentage;
-    }
-
-    function setAntiMEVAmountOutLimitRate(uint256 _antiMEVAmountOutLimitRate) external override onlyOwner {
-        antiMEVAmountOutLimitRate = _antiMEVAmountOutLimitRate;
     }
 }

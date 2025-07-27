@@ -174,8 +174,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         address[] memory path, 
         uint256[] memory feeRates, 
         address originTo, 
-        address referrer,
-        bool antiMEV
+        address referrer
     ) internal returns (bool) {
         IMEVGuard(MEV_GUARD).setOriginTo(originTo);
         for (uint256 i; i < path.length - 1; i++) {
@@ -184,7 +183,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
             uint256 amountOut = amounts[i + 1];
             (uint256 amount0Out, uint256 amount1Out) = input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));
             address to = i < path.length - 2 ? OutrunAMMLibrary.pairFor(factories[feeRates[i + 1]], output, path[i + 2], feeRates[i + 1]) : originTo;
-            if (!IOutrunAMMPair(OutrunAMMLibrary.pairFor(factories[feeRates[i]], input, output, feeRates[i])).swap(amount0Out, amount1Out, to, referrer, new bytes(0), antiMEV)) return false;
+            if (!IOutrunAMMPair(OutrunAMMLibrary.pairFor(factories[feeRates[i]], input, output, feeRates[i])).swap(amount0Out, amount1Out, to, referrer, new bytes(0))) return false;
         }
         return true;
     }
@@ -196,15 +195,14 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external override ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = getAmountsOut(amountIn, path, feeRates, antiMEV);
+        amounts = getAmountsOut(amountIn, path, feeRates);
         require(amounts[amounts.length - 1] >= amountOutMin, InsufficientOutputAmount());
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amounts[0]
         );
-        _swap(amounts, path, feeRates, to, referrer, antiMEV);
+        _swap(amounts, path, feeRates, to, referrer);
     }
 
     function swapTokensForExactTokens(
@@ -214,15 +212,14 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external override ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = getAmountsIn(amountOut, path, feeRates, antiMEV);
+        amounts = getAmountsIn(amountOut, path, feeRates);
         require(amounts[0] <= amountInMax, ExcessiveInputAmount());
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amounts[0]
         );
-        _swap(amounts, path, feeRates, to, referrer, antiMEV);
+        _swap(amounts, path, feeRates, to, referrer);
     }
 
     function swapExactETHForTokens(
@@ -231,15 +228,14 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external payable override ensure(deadline) returns (uint256[] memory amounts) {
         require(path[0] == WETH, InvalidPath());
-        amounts = getAmountsOut(msg.value, path, feeRates, antiMEV);
+        amounts = getAmountsOut(msg.value, path, feeRates);
         require(amounts[amounts.length - 1] >= amountOutMin, InsufficientOutputAmount());
         IWETH(WETH).deposit{value: amounts[0]}();
         assert(IWETH(WETH).transfer(OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amounts[0]));
-        _swap(amounts, path, feeRates, to, referrer, antiMEV);
+        _swap(amounts, path, feeRates, to, referrer);
     }
 
     function swapTokensForExactETH(
@@ -249,16 +245,15 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external override ensure(deadline) returns (uint256[] memory amounts) {
         require(path[path.length - 1] == WETH, InvalidPath());
-        amounts = getAmountsIn(amountOut, path, feeRates, antiMEV);
+        amounts = getAmountsIn(amountOut, path, feeRates);
         require(amounts[0] <= amountInMax, ExcessiveInputAmount());
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amounts[0]
         );
-        if (_swap(amounts, path, feeRates, address(this), referrer, antiMEV)) {
+        if (_swap(amounts, path, feeRates, address(this), referrer)) {
             IWETH(WETH).withdraw(amounts[amounts.length - 1]);
             TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
         }
@@ -271,16 +266,15 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external override ensure(deadline) returns (uint256[] memory amounts) {
         require(path[path.length - 1] == WETH, InvalidPath());
-        amounts = getAmountsOut(amountIn, path, feeRates, antiMEV);
+        amounts = getAmountsOut(amountIn, path, feeRates);
         require(amounts[amounts.length - 1] >= amountOutMin, InsufficientOutputAmount());
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amounts[0]
         );
-        if (_swap(amounts, path, feeRates, address(this), referrer, antiMEV)) {
+        if (_swap(amounts, path, feeRates, address(this), referrer)) {
             IWETH(WETH).withdraw(amounts[amounts.length - 1]);
             TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
         }
@@ -292,15 +286,14 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external payable override ensure(deadline) returns (uint256[] memory amounts) {
         require(path[0] == WETH, InvalidPath());
-        amounts = getAmountsIn(amountOut, path, feeRates, antiMEV);
+        amounts = getAmountsIn(amountOut, path, feeRates);
         require(amounts[0] <= msg.value, ExcessiveInputAmount());
         IWETH(WETH).deposit{value: amounts[0]}();
         assert(IWETH(WETH).transfer(OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amounts[0]));
-        _swap(amounts, path, feeRates, to, referrer, antiMEV);
+        _swap(amounts, path, feeRates, to, referrer);
         // refund dust eth, if any
         if (msg.value > amounts[0]) TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]);
     }
@@ -309,7 +302,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
      * SWAP (supporting fee-on-transfer tokens) *
      */
     // requires the initial amount to have already been sent to the first pair
-    function _swapSupportingFeeOnTransferTokens(address[] memory path, uint256[] memory feeRates, address originTo, address referrer, bool antiMEV) internal returns (bool) {
+    function _swapSupportingFeeOnTransferTokens(address[] memory path, uint256[] memory feeRates, address originTo, address referrer) internal returns (bool) {
         IMEVGuard(MEV_GUARD).setOriginTo(originTo);
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
@@ -322,11 +315,11 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
                 (uint256 reserve0, uint256 reserve1,) = pair.getReserves();
                 (uint256 reserveInput, uint256 reserveOutput) = input == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
                 amountInput = IERC20(input).balanceOf(address(pair)) - reserveInput;
-                amountOutput = getAmountOut(amountInput, reserveInput, reserveOutput, feeRates[i], antiMEV);
+                amountOutput = getAmountOut(amountInput, reserveInput, reserveOutput, feeRates[i]);
             }
             (uint256 amount0Out, uint256 amount1Out) = input == token0 ? (uint256(0), amountOutput) : (amountOutput, uint256(0));
             address to = i < path.length - 2 ? OutrunAMMLibrary.pairFor(factories[feeRates[i + 1]], output, path[i + 2], feeRates[i + 1]) : originTo;
-            if(!pair.swap(amount0Out, amount1Out, to, referrer, new bytes(0), antiMEV)) return false;
+            if(!pair.swap(amount0Out, amount1Out, to, referrer, new bytes(0))) return false;
         }
         return true;
     }
@@ -338,14 +331,13 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external override ensure(deadline) {
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amountIn
         );
         uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
-        _swapSupportingFeeOnTransferTokens(path, feeRates, to, referrer, antiMEV);
+        _swapSupportingFeeOnTransferTokens(path, feeRates, to, referrer);
         require(
             IERC20(path[path.length - 1]).balanceOf(to) - balanceBefore >= amountOutMin,
             InsufficientOutputAmount()
@@ -358,15 +350,14 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external payable override ensure(deadline) {
         require(path[0] == WETH, InvalidPath());
         uint256 amountIn = msg.value;
         IWETH(WETH).deposit{value: amountIn}();
         assert(IWETH(WETH).transfer(OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amountIn));
         uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
-        _swapSupportingFeeOnTransferTokens(path, feeRates, to, referrer, antiMEV);
+        _swapSupportingFeeOnTransferTokens(path, feeRates, to, referrer);
         require(
             IERC20(path[path.length - 1]).balanceOf(to) - balanceBefore >= amountOutMin,
             InsufficientOutputAmount()
@@ -380,14 +371,13 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256[] calldata feeRates,
         address to,
         address referrer,
-        uint256 deadline,
-        bool antiMEV
+        uint256 deadline
     ) external override ensure(deadline) {
         require(path[path.length - 1] == WETH, InvalidPath());
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, OutrunAMMLibrary.pairFor(factories[feeRates[0]], path[0], path[1], feeRates[0]), amountIn
         );
-        if(_swapSupportingFeeOnTransferTokens(path, feeRates, address(this), referrer, antiMEV)) {
+        if(_swapSupportingFeeOnTransferTokens(path, feeRates, address(this), referrer)) {
             uint256 amountOut = IERC20(WETH).balanceOf(address(this));
             require(amountOut >= amountOutMin, InsufficientOutputAmount());
             IWETH(WETH).withdraw(amountOut);
@@ -421,14 +411,12 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 amountIn, 
         uint256 reserveIn, 
         uint256 reserveOut, 
-        uint256 feeRate,
-        bool antiMEV
-    ) public view override returns (uint256 amountOut) {
+        uint256 feeRate
+    ) public pure override returns (uint256 amountOut) {
         require(amountIn > 0, InsufficientInputAmount());
         require(reserveIn > 0 && reserveOut > 0, InsufficientLiquidity());
 
-        uint256 realFeeRate = antiMEV ? feeRate + IMEVGuard(MEV_GUARD).antiMEVFeePercentage() * feeRate / RATIO : feeRate;
-        uint256 amountInWithFee = amountIn * (RATIO - realFeeRate);
+        uint256 amountInWithFee = amountIn * (RATIO - feeRate);
         uint256 numerator = amountInWithFee * reserveOut;
         uint256 denominator = reserveIn * RATIO + amountInWithFee;
         amountOut = numerator / denominator;
@@ -438,23 +426,20 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 amountOut, 
         uint256 reserveIn, 
         uint256 reserveOut, 
-        uint256 feeRate,
-        bool antiMEV
-    ) public view override returns (uint256 amountIn) {
+        uint256 feeRate
+    ) public pure override returns (uint256 amountIn) {
         require(amountOut > 0, InsufficientOutputAmount());
         require(reserveIn > 0 && reserveOut > 0, InsufficientLiquidity());
 
-        uint256 realFeeRate = antiMEV ? feeRate + IMEVGuard(MEV_GUARD).antiMEVFeePercentage() * feeRate / RATIO : feeRate;
         uint256 numerator = reserveIn * amountOut * RATIO;
-        uint256 denominator = (reserveOut - amountOut) * (RATIO - realFeeRate);
+        uint256 denominator = (reserveOut - amountOut) * (RATIO - feeRate);
         amountIn = (numerator / denominator) + 1;
     }
 
     function getAmountsOut(
         uint256 amountIn, 
         address[] memory path,
-        uint256[] memory feeRates,
-        bool antiMEV
+        uint256[] memory feeRates
     ) public view override returns (uint256[] memory amounts) {
         require(
             path.length >= 2 &&
@@ -467,15 +452,14 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         amounts[0] = amountIn;
         for (uint256 i; i < path.length - 1; i++) {
             (uint256 reserveIn, uint256 reserveOut) = getReserves(factories[feeRates[i]], path[i], path[i + 1], feeRates[i]);
-            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut, feeRates[i], antiMEV);
+            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut, feeRates[i]);
         }
     }
 
     function getAmountsIn(
         uint256 amountOut, 
         address[] memory path, 
-        uint256[] memory feeRates,
-        bool antiMEV
+        uint256[] memory feeRates
     ) public view override returns (uint256[] memory amounts) {
         require(
             path.length >= 2 &&
@@ -488,7 +472,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         amounts[amounts.length - 1] = amountOut;
         for (uint256 i = path.length - 1; i > 0; i--) {
             (uint256 reserveIn, uint256 reserveOut) = getReserves(factories[feeRates[i]], path[i - 1], path[i], feeRates[i - 1]);
-            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut, feeRates[i - 1], antiMEV);
+            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut, feeRates[i - 1]);
         }
     }
 }
