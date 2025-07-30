@@ -10,6 +10,7 @@ extra_output = ["storageLayout"]
 gas_reports = ["*"]
 
 [rpc_endpoints]
+sepolia = "${ETHEREUM_SEPOLIA_RPC}"
 bsc_testnet = "${BSC_TESTNET_RPC}"
 base_sepolia = "${BASE_SEPOLIA_RPC}"
 arbitrum_sepolia = "${ARBITRUM_SEPOLIA_RPC}"
@@ -26,6 +27,7 @@ monad_testnet = "${MONAD_TESTNET_RPC}"
 bsc_mainnet = "${BSC_MAINNET_RPC}"
 
 [etherscan]
+sepolia = { key = "${ETHEREUMSCAN_API_KEY}", chain = "11155111", url = "${ETHEREUMSCAN_API_URL}" }
 bsc_testnet = { key = "${BSCSCAN_API_KEY}", chain = "97", url = "${BSCSCAN_TESTNET_API_URL}" }
 base_sepolia = { key = "${BASESCAN_API_KEY}", chain = "84532", url = "${BASESCAN_API_URL}" }
 arbitrum_sepolia = { key = "${ARBITRUMSCAN_API_KEY}", chain = "421614", url = "${ARBITRUMSCAN_API_URL}" }
