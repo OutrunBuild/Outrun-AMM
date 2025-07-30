@@ -1,5 +1,12 @@
 source ../.env
 
+forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url sepolia \
+    --priority-gas-price 500000000 --with-gas-price 1500000000 \
+    --optimize --optimizer-runs 100000 \
+    --via-ir \
+    --broadcast --ffi -vvvv \
+    --verify
+
 forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url bsc_testnet \
     --with-gas-price 1000000000 \
     --optimize --optimizer-runs 100000 \

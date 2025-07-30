@@ -50,11 +50,11 @@ contract OutrunAMMScript is BaseScript {
         BLAST_GOVERNOR = vm.envAddress("BLAST_GOVERNOR");
 
         _chainsInit();
-        // _getDeployedFactory(30, 8);
-        // _getDeployedFactory(100, 8);
+        // _getDeployedFactory(30, 0);
+        // _getDeployedFactory(100, 0);
 
-        // _deployPairImplementation(8);
-        _deploy(8);
+        // _deployPairImplementation(0);
+        _deploy(0);
         
         // ReferralManager
         // referralManager = address(new ReferralManager(owner));
@@ -70,19 +70,21 @@ contract OutrunAMMScript is BaseScript {
         WETHs[57054] = vm.envAddress("SONIC_BLAZE_WS");
         WETHs[168587773] = vm.envAddress("BLAST_SEPOLIA_WETH");
         WETHs[534351] = vm.envAddress("SCROLL_SEPOLIA_WETH");
+        WETHs[11155111] = vm.envAddress("ETHEREUM_SEPOLIA_WETH");
         // WETHs[10143] = vm.envAddress("MONAD_TESTNET_WMOD");
         // WETHs[11155420] = vm.envAddress("OPTIMISTIC_SEPOLIA_WETH");
         // WETHs[300] = vm.envAddress("ZKSYNC_SEPOLIA_WETH");
         // WETHs[59141] = vm.envAddress("LINEA_SEPOLIA_WETH");
 
-        antiFrontDefendBlocks[97] = 400;        // 1.5s
+        antiFrontDefendBlocks[97] = 800;        // 0.75s
         antiFrontDefendBlocks[84532] = 300;     // 2s
-        antiFrontDefendBlocks[421614] = 2400;    // 0.25s
+        antiFrontDefendBlocks[421614] = 2400;   // 0.25s
         antiFrontDefendBlocks[43113] = 400;     // 1.5s
         antiFrontDefendBlocks[80002] = 300;     // 2s
-        antiFrontDefendBlocks[57054] = 1800;     // 0.33s
+        antiFrontDefendBlocks[57054] = 1800;    // 0.33s
         antiFrontDefendBlocks[168587773] = 300; // 2s
-        antiFrontDefendBlocks[534351] = 300;    // 3s
+        antiFrontDefendBlocks[534351] = 200;    // 3s
+        antiFrontDefendBlocks[11155111] = 100;  // 12s
         // antiFrontDefendBlocks[10143] = 1200;     // 0.5s
         // antiFrontDefendBlocks[11155420] = 300;  // 2s
         // antiFrontDefendBlocks[300] = 600;       // 1s
@@ -131,19 +133,17 @@ contract OutrunAMMScript is BaseScript {
     function _deployMEVGuard(uint256 nonce) internal returns (address guard) {
         bytes32 salt = keccak256(abi.encodePacked("OutrunMEVGuard", nonce));
         uint256 antiFrontDefendBlock = antiFrontDefendBlocks[block.chainid];
-        uint256 antiMEVFeePercentage = 5000;      // 50%
-        uint256 antiMEVAmountOutLimitRate = 50;   // 0.5%
 
         bytes memory creationCode;
         if (block.chainid == 421614) {  // Arb
             creationCode = abi.encodePacked(
                 type(MEVGuardOnARB).creationCode,
-                abi.encode(owner, antiFrontDefendBlock, antiMEVFeePercentage, antiMEVAmountOutLimitRate)
+                abi.encode(owner, antiFrontDefendBlock)
             );
         } else {
             creationCode = abi.encodePacked(
                 type(MEVGuard).creationCode,
-                abi.encode(owner, antiFrontDefendBlock, antiMEVFeePercentage, antiMEVAmountOutLimitRate)
+                abi.encode(owner, antiFrontDefendBlock)
             );
         }
 
