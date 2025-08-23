@@ -7,7 +7,7 @@ pragma solidity ^0.8.28;
 interface IMEVGuard {
     struct ExecutionDetail {
         bool isExecuted;
-        uint248 requestNum;
+        uint256 requestNum;
     }
 
     function defend(
