@@ -47,7 +47,7 @@ contract OutrunAMMScript is BaseScript {
         SY_USDB = vm.envAddress("SY_USDB");
         BLAST_GOVERNOR = vm.envAddress("BLAST_GOVERNOR");
 
-        _deployReferralManager();
+        // _deployReferralManager();
 
         _chainsInit();
         // _getDeployedFactory(30, 0);
@@ -63,7 +63,7 @@ contract OutrunAMMScript is BaseScript {
         WETHs[421614] = vm.envAddress("ARBITRUM_SEPOLIA_WETH");
         WETHs[43113] = vm.envAddress("AVALANCHE_FUJI_WAVAX");
         WETHs[80002] = vm.envAddress("POLYGON_AMOY_WPOL");
-        WETHs[57054] = vm.envAddress("SONIC_BLAZE_WS");
+        WETHs[57054] = vm.envAddress("SONIC_TESTNET_WS");
         WETHs[168587773] = vm.envAddress("BLAST_SEPOLIA_WETH");
         WETHs[534351] = vm.envAddress("SCROLL_SEPOLIA_WETH");
         WETHs[11155111] = vm.envAddress("ETHEREUM_SEPOLIA_WETH");
@@ -91,12 +91,12 @@ contract OutrunAMMScript is BaseScript {
         bytes32 salt = keccak256(abi.encodePacked("OutrunAMMFactory", swapFeeRate, nonce));
         deployed = IOutrunDeployer(OUTRUN_DEPLOYER).getDeployed(owner, salt);
 
-        console.log("%d fee OutrunAMMFactory deployed on %s", swapFeeRate, deployed);
+        console2.log("%d fee OutrunAMMFactory deployed on %s", swapFeeRate, deployed);
     }
 
     function _deployReferralManager() internal returns (address referralManager) {
         referralManager = address(new ReferralManager(owner));
-        console.log("ReferralManager deployed on %s", referralManager);
+        console2.log("ReferralManager deployed on %s", referralManager);
     }
 
     function _deployPairImplementation(uint256 nonce) internal returns (address implementation) {
@@ -108,7 +108,7 @@ contract OutrunAMMScript is BaseScript {
             implementation = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, type(OutrunAMMPair).creationCode);
         }
 
-        console.log("OutrunAMMPairImplementation deployed on %s", implementation);
+        console2.log("OutrunAMMPairImplementation deployed on %s", implementation);
     }
 
     function _deploy(uint256 nonce) internal {
@@ -150,7 +150,7 @@ contract OutrunAMMScript is BaseScript {
 
         guard = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
 
-        console.log("OutrunMEVGuard deployed on %s", guard);
+        console2.log("OutrunMEVGuard deployed on %s", guard);
     }
 
     function _deployFactory(address guard, uint256 swapFeeRate, uint256 nonce) internal returns (address factoryAddr) {
@@ -165,7 +165,7 @@ contract OutrunAMMScript is BaseScript {
         } else if (block.chainid == 168587773) {    // Blast
             address factory = swapFeeRate == 30 ? vm.envAddress("OUTRUN_AMM_FACTORY_30") : swapFeeRate == 100 ? vm.envAddress("OUTRUN_AMM_FACTORY_100") : address(0);
             address yieldVault = address(new OutrunAMMYieldVault(SY_BETH, SY_USDB, factory, BLAST_GOVERNOR));
-            console.log("%d fee OutrunAMMYieldVault deployed on %s", swapFeeRate, yieldVault);
+            console2.log("%d fee OutrunAMMYieldVault deployed on %s", swapFeeRate, yieldVault);
 
             creationCode = abi.encodePacked(
                 type(OutrunAMMFactoryOnBlast).creationCode,
@@ -181,7 +181,7 @@ contract OutrunAMMScript is BaseScript {
         factoryAddr = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
         IOutrunAMMFactory(factoryAddr).setFeeTo(feeTo);
 
-        console.log("%d fee OutrunAMMFactory deployed on %s", swapFeeRate, factoryAddr);
+        console2.log("%d fee OutrunAMMFactory deployed on %s", swapFeeRate, factoryAddr);
     }
 
     function _deployOutrunAMMRouter(address guard, address factory0, address factory01, uint256 nonce) internal {
@@ -192,7 +192,7 @@ contract OutrunAMMScript is BaseScript {
         );
         address routerAddr = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
 
-        console.log("OutrunAMMRouter deployed on %s", routerAddr);
+        console2.log("OutrunAMMRouter deployed on %s", routerAddr);
     }
 
     function _deployLiquidityRouter(address factory0, address factory01, uint256 nonce) internal {
@@ -203,6 +203,6 @@ contract OutrunAMMScript is BaseScript {
         );
         address routerAddr = IOutrunDeployer(OUTRUN_DEPLOYER).deploy(salt, creationCode);
 
-        console.log("MemeverseLiquidityRouter deployed on %s", routerAddr);
+        console2.log("MemeverseLiquidityRouter deployed on %s", routerAddr);
     }
 }
