@@ -73,7 +73,7 @@ interface IOutrunAMMPairOnBlast {
 
     error ProductKLoss();
 
-    error EmptyOriginTo();
+    error EmptyFinalTo();
 
     error TransferFailed();
 
@@ -106,7 +106,7 @@ interface IOutrunAMMPairOnBlast {
         uint256 amount1In, 
         uint256 amount0Out, 
         uint256 amount1Out, 
-        address indexed originTo
+        address indexed finalTo
     );
 
     event Swap(

@@ -19,9 +19,9 @@ interface IMEVGuard {
 
     function antiFrontDefendBlock() external view returns (uint256);
 
-    function originTo() external view returns (address);
+    function finalTo() external view returns (address);
 
-    function setOriginTo(address originTo) external;
+    function setFinalTo(address finalTo) external;
 
     function setFactoryStatus(address factory, bool status) external;
 

@@ -7,16 +7,14 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {OMath} from "../libraries/OMath.sol";
 import {IERC20Rebasing} from "./IERC20Rebasing.sol";
 import {UQ112x112} from "../libraries/UQ112x112.sol";
+import {OutrunAMMERC20} from "../core/OutrunAMMERC20.sol";
 import {IMEVGuard} from "../core/interfaces/IMEVGuard.sol";
-import {Initializable} from "../libraries/Initializable.sol";
 import {FixedPoint128} from "../libraries/FixedPoint128.sol";
 import {ReentrancyGuard} from "../libraries/ReentrancyGuard.sol";
 import {BlastGovernorableInit} from "./BlastGovernorableInit.sol";
 import {IStandardizedYield} from "./interfaces/IStandardizedYield.sol";
 import {IOutrunAMMCallee} from "../core/interfaces/IOutrunAMMCallee.sol";
 import {IOutrunAMMFactory} from "../core/interfaces/IOutrunAMMFactory.sol";
-import {IOutrunAMMERC20, OutrunAMMERC20} from "../core/OutrunAMMERC20.sol";
-import {IOutrunAMMYieldVault} from "./interfaces/IOutrunAMMYieldVault.sol";
 import {IOutrunAMMPairOnBlast} from "./interfaces/IOutrunAMMPairOnBlast.sol";
 
 contract OutrunAMMPairOnBlast is IOutrunAMMPairOnBlast, OutrunAMMERC20, ReentrancyGuard, BlastGovernorableInit {
@@ -255,11 +253,11 @@ contract OutrunAMMPairOnBlast is IOutrunAMMPairOnBlast, OutrunAMMERC20, Reentran
         uint256 amount1In = IERC20(_token1).balanceOf(address(this)) - _reserve1;
 
         if (!IMEVGuard(MEVGuard).defend(_reserve0, _reserve1, amount0Out, amount1Out)) {
-            address originTo = IMEVGuard(MEVGuard).originTo();
-            require(originTo != address(0), EmptyOriginTo());
-            if (amount0In != 0) _safeTransfer(_token0, originTo, amount0In);
-            if (amount1In != 0) _safeTransfer(_token1, originTo, amount1In);
-            emit SwapInterrupted(msg.sender, amount0In, amount1In, amount0Out, amount1Out, originTo);
+            address finalTo = IMEVGuard(MEVGuard).finalTo();
+            require(finalTo != address(0), EmptyFinalTo());
+            if (amount0In != 0) _safeTransfer(_token0, finalTo, amount0In);
+            if (amount1In != 0) _safeTransfer(_token1, finalTo, amount1In);
+            emit SwapInterrupted(msg.sender, amount0In, amount1In, amount0Out, amount1Out, finalTo);
             return false;
         }
 
