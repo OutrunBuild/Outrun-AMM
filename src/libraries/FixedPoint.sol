@@ -3,8 +3,6 @@ pragma solidity ^0.8.28;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import {BitMath} from "./BitMath.sol";
-
 library FixedPoint {
     // range: [0, 2**112 - 1]
     // resolution: 1 / 2**112

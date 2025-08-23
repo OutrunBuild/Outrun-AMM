@@ -9,7 +9,6 @@ import {TransferHelper} from "../libraries/TransferHelper.sol";
 import {OutrunAMMLibrary} from "../libraries/OutrunAMMLibrary.sol";
 import {IOutrunAMMRouter} from "./interfaces/IOutrunAMMRouter.sol";
 import {IOutrunAMMPair} from "../core/interfaces/IOutrunAMMPair.sol";
-import {IOutrunAMMERC20} from "../core/interfaces/IOutrunAMMERC20.sol";
 import {IOutrunAMMFactory} from "../core/interfaces/IOutrunAMMFactory.sol";
 
 contract OutrunAMMRouter is IOutrunAMMRouter {
@@ -124,7 +123,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256 deadline
     ) public override ensure(deadline) returns (uint256 amountA, uint256 amountB) {
         address pair = OutrunAMMLibrary.pairFor(factories[feeRate], tokenA, tokenB, feeRate);
-        IOutrunAMMERC20(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
+        TransferHelper.safeTransferFrom(pair, msg.sender, pair, liquidity);     // send liquidity to pair
         (uint256 amount0, uint256 amount1) = IOutrunAMMPair(pair).burn(to);
         (address token0,) = OutrunAMMLibrary.sortTokens(tokenA, tokenB);
         (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
@@ -173,16 +172,16 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
         uint256[] memory amounts, 
         address[] memory path, 
         uint256[] memory feeRates, 
-        address originTo, 
+        address finalTo, 
         address referrer
     ) internal returns (bool) {
-        IMEVGuard(MEV_GUARD).setOriginTo(originTo);
+        IMEVGuard(MEV_GUARD).setFinalTo(finalTo);
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0,) = OutrunAMMLibrary.sortTokens(input, output);
             uint256 amountOut = amounts[i + 1];
             (uint256 amount0Out, uint256 amount1Out) = input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));
-            address to = i < path.length - 2 ? OutrunAMMLibrary.pairFor(factories[feeRates[i + 1]], output, path[i + 2], feeRates[i + 1]) : originTo;
+            address to = i < path.length - 2 ? OutrunAMMLibrary.pairFor(factories[feeRates[i + 1]], output, path[i + 2], feeRates[i + 1]) : finalTo;
             if (!IOutrunAMMPair(OutrunAMMLibrary.pairFor(factories[feeRates[i]], input, output, feeRates[i])).swap(amount0Out, amount1Out, to, referrer, new bytes(0))) return false;
         }
         return true;
@@ -302,8 +301,8 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
      * SWAP (supporting fee-on-transfer tokens) *
      */
     // requires the initial amount to have already been sent to the first pair
-    function _swapSupportingFeeOnTransferTokens(address[] memory path, uint256[] memory feeRates, address originTo, address referrer) internal returns (bool) {
-        IMEVGuard(MEV_GUARD).setOriginTo(originTo);
+    function _swapSupportingFeeOnTransferTokens(address[] memory path, uint256[] memory feeRates, address finalTo, address referrer) internal returns (bool) {
+        IMEVGuard(MEV_GUARD).setFinalTo(finalTo);
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0,) = OutrunAMMLibrary.sortTokens(input, output);
@@ -318,7 +317,7 @@ contract OutrunAMMRouter is IOutrunAMMRouter {
                 amountOutput = getAmountOut(amountInput, reserveInput, reserveOutput, feeRates[i]);
             }
             (uint256 amount0Out, uint256 amount1Out) = input == token0 ? (uint256(0), amountOutput) : (amountOutput, uint256(0));
-            address to = i < path.length - 2 ? OutrunAMMLibrary.pairFor(factories[feeRates[i + 1]], output, path[i + 2], feeRates[i + 1]) : originTo;
+            address to = i < path.length - 2 ? OutrunAMMLibrary.pairFor(factories[feeRates[i + 1]], output, path[i + 2], feeRates[i + 1]) : finalTo;
             if(!pair.swap(amount0Out, amount1Out, to, referrer, new bytes(0))) return false;
         }
         return true;

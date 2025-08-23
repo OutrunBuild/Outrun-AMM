@@ -6,7 +6,6 @@ import {IOutrunDeployer} from "./IOutrunDeployer.sol";
 import {OutrunAMMPair} from "../src/core/OutrunAMMPair.sol";
 import {MEVGuardOnARB} from "../src/arb/MEVGuardOnARB.sol";
 import {IMEVGuard, MEVGuard} from "../src/core/MEVGuard.sol";
-import {OutrunAMMERC20} from "../src/core/OutrunAMMERC20.sol";
 import {OutrunAMMRouter} from "../src/router/OutrunAMMRouter.sol";
 import {ReferralManager} from "../src/referral/ReferralManager.sol";
 import {OutrunAMMYieldVault} from "../src/blast/OutrunAMMYieldVault.sol";
@@ -21,7 +20,6 @@ contract OutrunAMMScript is BaseScript {
     address internal feeTo;
     address internal OUTRUN_DEPLOYER;
     address internal pairImplementation;
-    address internal referralManager;
 
     address internal WETH;
     address internal USDB;
@@ -49,16 +47,14 @@ contract OutrunAMMScript is BaseScript {
         SY_USDB = vm.envAddress("SY_USDB");
         BLAST_GOVERNOR = vm.envAddress("BLAST_GOVERNOR");
 
+        _deployReferralManager();
+
         _chainsInit();
         // _getDeployedFactory(30, 0);
         // _getDeployedFactory(100, 0);
 
         // _deployPairImplementation(0);
         _deploy(0);
-        
-        // ReferralManager
-        // referralManager = address(new ReferralManager(owner));
-        // console.log("ReferralManager deployed on %s", referralManager);
     }
 
     function _chainsInit() internal {
@@ -96,6 +92,11 @@ contract OutrunAMMScript is BaseScript {
         deployed = IOutrunDeployer(OUTRUN_DEPLOYER).getDeployed(owner, salt);
 
         console.log("%d fee OutrunAMMFactory deployed on %s", swapFeeRate, deployed);
+    }
+
+    function _deployReferralManager() internal returns (address referralManager) {
+        referralManager = address(new ReferralManager(owner));
+        console.log("ReferralManager deployed on %s", referralManager);
     }
 
     function _deployPairImplementation(uint256 nonce) internal returns (address implementation) {

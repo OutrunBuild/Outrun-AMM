@@ -6,7 +6,6 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {TransferHelper} from "../libraries/TransferHelper.sol";
 import {OutrunAMMLibrary} from "../libraries/OutrunAMMLibrary.sol";
 import {IOutrunAMMPair} from "../core/interfaces/IOutrunAMMPair.sol";
-import {IOutrunAMMERC20} from "../core/interfaces/IOutrunAMMERC20.sol";
 import {IOutrunAMMFactory} from "../core/interfaces/IOutrunAMMFactory.sol";
 import {IMemeverseLiquidityRouter} from "./interfaces/IMemeverseLiquidityRouter.sol";
 
@@ -162,7 +161,7 @@ contract MemeverseLiquidityRouter is IMemeverseLiquidityRouter {
         uint256 deadline
     ) external override ensure(deadline) returns (uint256 amountA, uint256 amountB) {
         address pair = OutrunAMMLibrary.pairFor(factories[feeRate], tokenA, tokenB, feeRate);
-        IOutrunAMMERC20(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
+        TransferHelper.safeTransferFrom(pair, msg.sender, pair, liquidity);     // send liquidity to pair
         (uint256 amount0, uint256 amount1) = IOutrunAMMPair(pair).burn(to);
         (address token0,) = OutrunAMMLibrary.sortTokens(tokenA, tokenB);
         (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
