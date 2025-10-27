@@ -25,6 +25,7 @@ blast_sepolia = "${BLAST_SEPOLIA_RPC}"
 scroll_sepolia = "${SCROLL_SEPOLIA_RPC}"
 monad_testnet = "${MONAD_TESTNET_RPC}"
 bera_sepolia = "${BERA_SEPOLIA_RPC}"
+flow_testnet = "${FLOW_TESTNET_RPC}"
 
 bsc_mainnet = "${BSC_MAINNET_RPC}"
 

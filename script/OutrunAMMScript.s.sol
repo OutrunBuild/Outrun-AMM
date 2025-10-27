@@ -48,7 +48,6 @@ contract OutrunAMMScript is BaseScript {
         BLAST_GOVERNOR = vm.envAddress("BLAST_GOVERNOR");
 
         // _deployReferralManager();
-
         _chainsInit();
         // _getDeployedFactory(30, 0);
         // _getDeployedFactory(100, 0);
@@ -67,6 +66,7 @@ contract OutrunAMMScript is BaseScript {
         WETHs[168587773] = vm.envAddress("BLAST_SEPOLIA_WETH");
         WETHs[534351] = vm.envAddress("SCROLL_SEPOLIA_WETH");
         WETHs[11155111] = vm.envAddress("ETHEREUM_SEPOLIA_WETH");
+        WETHs[545] = vm.envAddress("ETHEREUM_SEPOLIA_WETH");
         // WETHs[10143] = vm.envAddress("MONAD_TESTNET_WMOD");
         // WETHs[11155420] = vm.envAddress("OPTIMISTIC_SEPOLIA_WETH");
         // WETHs[300] = vm.envAddress("ZKSYNC_SEPOLIA_WETH");
@@ -139,12 +139,12 @@ contract OutrunAMMScript is BaseScript {
         if (block.chainid == 421614) {  // Arb
             creationCode = abi.encodePacked(
                 type(MEVGuardOnARB).creationCode,
-                abi.encode(owner, antiFrontDefendBlock)
+                abi.encode(owner, antiFrontDefendBlock, 200)
             );
         } else {
             creationCode = abi.encodePacked(
                 type(MEVGuard).creationCode,
-                abi.encode(owner, antiFrontDefendBlock)
+                abi.encode(owner, antiFrontDefendBlock, 200)
             );
         }
 

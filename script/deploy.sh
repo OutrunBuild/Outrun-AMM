@@ -7,13 +7,13 @@ source ../.env
 #     --broadcast --ffi -vvvv \
 #     --verify
 
-forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url bsc_testnet \
-    --with-gas-price 100000000 \
-    --optimize --optimizer-runs 100000 \
-    --via-ir \
-    --broadcast --ffi -vvvv \
-    --verify \
-    --slow
+# forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url bsc_testnet \
+#     --with-gas-price 100000000 \
+#     --optimize --optimizer-runs 100000 \
+#     --via-ir \
+#     --broadcast --ffi -vvvv \
+#     --verify \
+#     --slow
 
 # forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url base_sepolia \
 #     --priority-gas-price 2000000 --with-gas-price 150000000 \
@@ -85,3 +85,12 @@ forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url bsc_testnet \
 #     --via-ir \
 #     --broadcast --ffi -vvvv \
 #     --verify
+
+forge script OutrunAMMScript.s.sol:OutrunAMMScript --rpc-url flow_testnet \
+    --with-gas-price 1000000 \
+    --optimize --optimizer-runs 100000 \
+    --via-ir \
+    --broadcast --ffi -vvvv \
+    --verify --verifier blockscout \
+    --verifier-url 'https://evm-testnet.flowscan.io/api/' \
+    --slow
