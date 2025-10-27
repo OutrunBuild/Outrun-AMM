@@ -13,6 +13,8 @@ contract MEVGuard is IMEVGuard, Ownable {
 
     uint256 public antiFrontDefendBlock;
 
+    uint256 public maxDenominator;
+
     address public transient finalTo;
 
     mapping(address factory => bool) public factories;
@@ -23,8 +25,9 @@ contract MEVGuard is IMEVGuard, Ownable {
 
     mapping(uint256 blockNum => mapping(address pair => mapping(address origin => bool))) private uniqueRequests;
 
-    constructor(address _owner, uint256 _antiFrontDefendBlock) Ownable(_owner) {
+    constructor(address _owner, uint256 _antiFrontDefendBlock, uint256 _maxDenominator) Ownable(_owner) {
         antiFrontDefendBlock = _antiFrontDefendBlock;
+        maxDenominator = _maxDenominator;
     }
 
     function defend(
@@ -67,7 +70,7 @@ contract MEVGuard is IMEVGuard, Ownable {
             )));
             
             // Success probability is 1 / denominator
-            uint256 denominator = latestExecutionRequestNum == 0 ? 1 : latestExecutionRequestNum > 100 ? 100 : latestExecutionRequestNum;
+            uint256 denominator = latestExecutionRequestNum == 0 ? 1 : latestExecutionRequestNum > maxDenominator ? maxDenominator : latestExecutionRequestNum;
             if (randomNum % denominator == 0) {
                 executionDetails[currentBlockNum][pair].isExecuted == true;
             } else {
@@ -93,5 +96,9 @@ contract MEVGuard is IMEVGuard, Ownable {
 
     function setAntiFrontDefendBlock(uint256 _antiFrontDefendBlock) external override onlyOwner {
         antiFrontDefendBlock = _antiFrontDefendBlock;
+    }
+
+    function setMaxDenominator(uint256 _maxDenominator) external override onlyOwner {
+        maxDenominator = _maxDenominator;
     }
 }

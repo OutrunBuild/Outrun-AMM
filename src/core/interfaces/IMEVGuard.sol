@@ -29,6 +29,8 @@ interface IMEVGuard {
 
     function setAntiFrontDefendBlock(uint256 antiFrontDefendBlock) external;
 
+    function setMaxDenominator(uint256 maxDenominator) external;
+
     
     error BlockLimit();
 
